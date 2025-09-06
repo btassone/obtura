@@ -1,0 +1,49 @@
+graph TB
+    subgraph "Middleware Stack"
+        Request[HTTP Request]
+        MW1[Logger Middleware]
+        MW2[Auth Middleware]
+        MW3[CORS Middleware]
+        MW4[Rate Limiter]
+        MW5[Plugin Middleware]
+        Handler[Route Handler]
+        Response[HTTP Response]
+        
+        Request --> MW1
+        MW1 --> MW2
+        MW2 --> MW3
+        MW3 --> MW4
+        MW4 --> MW5
+        MW5 --> Handler
+        Handler --> Response
+    end
+
+    subgraph "Middleware Registry"
+        Registry[Middleware Registry]
+        Global[Global Middleware]
+        Route[Route Middleware]
+        Plugin[Plugin Middleware]
+        
+        Registry --> Global
+        Registry --> Route
+        Registry --> Plugin
+    end
+
+    subgraph "Middleware Interface"
+        Interface[IMiddleware]
+        Process[Process next Handler]
+        Priority[Priority]
+        Name[Name]
+        
+        Interface --> Process
+        Interface --> Priority
+        Interface --> Name
+    end
+
+    subgraph "Plugin Integration"
+        PluginReg[Plugin Registration]
+        RegisterMW[Register Middleware]
+        
+        PluginReg --> RegisterMW
+        RegisterMW --> Registry
+    end

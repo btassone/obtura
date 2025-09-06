@@ -1,0 +1,68 @@
+package adminpages
+
+import (
+	"github.com/btassone/obtura/internal/models"
+	"github.com/btassone/obtura/web/templates/admin/layout"
+)
+
+templ PluginsList(user *models.User) {
+	@adminlayout.AdminBase("Plugins", user) {
+		<div class="mb-8">
+			<div class="flex items-center justify-between">
+				<h1 class="text-2xl font-semibold text-gray-900">Plugins</h1>
+				<a href="/admin/plugins/install" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+					<svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+					</svg>
+					Install Plugin
+				</a>
+			</div>
+			<p class="mt-1 text-sm text-gray-600">Extend your site's functionality with plugins</p>
+		</div>
+
+		<div class="bg-white shadow overflow-hidden sm:rounded-lg">
+			<ul class="divide-y divide-gray-200">
+				@PluginItem("Database", "Core database functionality", "1.0.0", true, true, "database")
+				@PluginItem("Pages", "Page management system", "1.0.0", true, true, "pages")
+				@PluginItem("Media Library", "Upload and manage media files", "1.0.0", true, false, "media")
+				@PluginItem("SEO Tools", "Search engine optimization", "2.1.0", true, false, "seo")
+				@PluginItem("Contact Forms", "Create custom contact forms", "1.5.0", false, false, "contact-forms")
+				@PluginItem("Analytics", "Site analytics and insights", "1.2.0", false, false, "analytics")
+			</ul>
+		</div>
+	}
+}
+
+templ PluginItem(name, description, version string, isActive, isCore bool, pluginId string) {
+	<li class="px-6 py-4">
+		<div class="flex items-center justify-between">
+			<div class="flex-1">
+				<div class="flex items-center">
+					<h3 class="text-sm font-medium text-gray-900">{ name }</h3>
+					<span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+						v{ version }
+					</span>
+					if isCore {
+						<span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+							Core
+						</span>
+					}
+				</div>
+				<p class="mt-1 text-sm text-gray-500">{ description }</p>
+			</div>
+			<div class="ml-4 flex-shrink-0">
+				if isCore {
+					<span class="text-sm text-gray-500">Always Active</span>
+				} else if isActive {
+					<button class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 bg-indigo-600">
+						<span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+					</button>
+				} else {
+					<button class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 bg-gray-200">
+						<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+					</button>
+				}
+			</div>
+		</div>
+	</li>
+}

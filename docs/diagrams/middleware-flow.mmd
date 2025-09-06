@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant Client
+    participant Server
+    participant GlobalMW as Global Middleware
+    participant PluginMW as Plugin Middleware
+    participant RouteMW as Route Middleware
+    participant Handler
+    participant DB
+
+    Client->>Server: HTTP Request
+    Server->>GlobalMW: Logger, CORS, Security
+    
+    alt Authenticated Route
+        GlobalMW->>GlobalMW: Check Auth Token
+        GlobalMW->>DB: Validate Session
+    end
+    
+    GlobalMW->>PluginMW: Plugin-specific MW
+    PluginMW->>RouteMW: Route-specific MW
+    
+    alt Rate Limited
+        RouteMW->>RouteMW: Check Rate Limits
+        RouteMW-->>Client: 429 Too Many Requests
+    else Allowed
+        RouteMW->>Handler: Process Request
+        Handler->>DB: Business Logic
+        DB->>Handler: Data
+        Handler->>RouteMW: Response
+        RouteMW->>PluginMW: Response
+        PluginMW->>GlobalMW: Response
+        GlobalMW->>Client: HTTP Response
+    end

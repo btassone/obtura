@@ -1,0 +1,121 @@
+package adminpages
+
+import (
+	"github.com/btassone/obtura/internal/models"
+	"github.com/btassone/obtura/web/templates/admin/layout"
+)
+
+templ Settings(user *models.User) {
+	@adminlayout.AdminBase("Settings", user) {
+		<div class="mb-8">
+			<h1 class="text-2xl font-semibold text-gray-900">Settings</h1>
+			<p class="mt-1 text-sm text-gray-600">Configure your site settings</p>
+		</div>
+
+		<div class="bg-white shadow sm:rounded-lg">
+			<div class="px-4 py-5 sm:p-6">
+				<form class="space-y-8 divide-y divide-gray-200">
+					<!-- General Settings -->
+					<div>
+						<h3 class="text-lg leading-6 font-medium text-gray-900">General Settings</h3>
+						<p class="mt-1 text-sm text-gray-500">Basic site configuration</p>
+						<div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+							<div class="sm:col-span-4">
+								<label for="site-name" class="block text-sm font-medium text-gray-700">Site Name</label>
+								<input type="text" name="site-name" id="site-name" value="Obtura Site" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"/>
+							</div>
+							<div class="sm:col-span-4">
+								<label for="tagline" class="block text-sm font-medium text-gray-700">Tagline</label>
+								<input type="text" name="tagline" id="tagline" value="Just another Obtura site" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"/>
+							</div>
+							<div class="sm:col-span-4">
+								<label for="site-url" class="block text-sm font-medium text-gray-700">Site URL</label>
+								<input type="url" name="site-url" id="site-url" value="http://localhost:3000" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"/>
+							</div>
+						</div>
+					</div>
+
+					<!-- Email Settings -->
+					<div class="pt-8">
+						<h3 class="text-lg leading-6 font-medium text-gray-900">Email Settings</h3>
+						<p class="mt-1 text-sm text-gray-500">Configure email notifications</p>
+						<div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+							<div class="sm:col-span-4">
+								<label for="admin-email" class="block text-sm font-medium text-gray-700">Admin Email</label>
+								<input type="email" name="admin-email" id="admin-email" value="admin@example.com" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"/>
+							</div>
+							<div class="sm:col-span-4">
+								<label for="from-email" class="block text-sm font-medium text-gray-700">From Email</label>
+								<input type="email" name="from-email" id="from-email" value="noreply@example.com" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"/>
+							</div>
+						</div>
+					</div>
+
+					<!-- Reading Settings -->
+					<div class="pt-8">
+						<h3 class="text-lg leading-6 font-medium text-gray-900">Reading Settings</h3>
+						<p class="mt-1 text-sm text-gray-500">Configure how content is displayed</p>
+						<div class="mt-6">
+							<div class="space-y-4">
+								<div class="flex items-center">
+									<input id="show-homepage" name="homepage-display" type="radio" checked class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"/>
+									<label for="show-homepage" class="ml-3 block text-sm font-medium text-gray-700">
+										Show static homepage
+									</label>
+								</div>
+								<div class="flex items-center">
+									<input id="show-posts" name="homepage-display" type="radio" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"/>
+									<label for="show-posts" class="ml-3 block text-sm font-medium text-gray-700">
+										Show latest posts
+									</label>
+								</div>
+							</div>
+							<div class="mt-6">
+								<label for="posts-per-page" class="block text-sm font-medium text-gray-700">Posts per page</label>
+								<input type="number" name="posts-per-page" id="posts-per-page" value="10" min="1" max="100" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-32 shadow-sm sm:text-sm border-gray-300 rounded-md"/>
+							</div>
+						</div>
+					</div>
+
+					<!-- Privacy Settings -->
+					<div class="pt-8">
+						<h3 class="text-lg leading-6 font-medium text-gray-900">Privacy Settings</h3>
+						<p class="mt-1 text-sm text-gray-500">Control site visibility</p>
+						<div class="mt-6 space-y-4">
+							<div class="flex items-start">
+								<div class="flex items-center h-5">
+									<input id="search-engines" name="search-engines" type="checkbox" checked class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"/>
+								</div>
+								<div class="ml-3 text-sm">
+									<label for="search-engines" class="font-medium text-gray-700">Allow search engines</label>
+									<p class="text-gray-500">Let search engines index this site</p>
+								</div>
+							</div>
+							<div class="flex items-start">
+								<div class="flex items-center h-5">
+									<input id="user-registration" name="user-registration" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"/>
+								</div>
+								<div class="ml-3 text-sm">
+									<label for="user-registration" class="font-medium text-gray-700">Allow user registration</label>
+									<p class="text-gray-500">Enable public user registration</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Save Button -->
+					<div class="pt-5">
+						<div class="flex justify-end">
+							<button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+								Cancel
+							</button>
+							<button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+								Save Settings
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	}
+}

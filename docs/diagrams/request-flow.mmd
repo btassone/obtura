@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant Browser
+    participant Server
+    participant MW as Middleware Stack
+    participant Router
+    participant Plugin
+    participant Layout
+    participant Templ
+    participant HTMX
+
+    Browser->>Server: HTTP Request
+    Server->>MW: Process Request
+    MW->>MW: Global Middleware
+    MW->>MW: Plugin Middleware
+    MW->>MW: Route Middleware
+    MW->>Router: Route Request
+    Router->>Plugin: Find Handler
+    Plugin->>Templ: Render Component
+    
+    alt Full Page Request
+        Templ->>Layout: Wrap in Layout
+        Layout->>MW: Full HTML Response
+        MW->>MW: Route Middleware
+        MW->>MW: Plugin Middleware
+        MW->>MW: Global Middleware
+        MW->>Browser: HTTP Response
+    else HTMX Partial Request
+        Templ->>HTMX: Partial HTML
+        HTMX->>MW: Partial Response
+        MW->>MW: Route Middleware
+        MW->>MW: Plugin Middleware
+        MW->>MW: Global Middleware
+        MW->>Browser: Update DOM
+    end

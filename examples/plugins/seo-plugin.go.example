@@ -1,0 +1,248 @@
+package examples
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"strings"
+
+	"github.com/btassone/obtura/pkg/plugin"
+)
+
+// SEOPlugin demonstrates a hookable plugin that modifies page output
+type SEOPlugin struct {
+	plugin.BasePlugin
+}
+
+// NewSEOPlugin creates a new SEO plugin instance
+func NewSEOPlugin() *SEOPlugin {
+	return &SEOPlugin{
+		BasePlugin: plugin.BasePlugin{
+			PluginID:          "com.example.seo",
+			PluginName:        "SEO Optimizer",
+			PluginVersion:     "1.0.0",
+			PluginDescription: "Adds SEO meta tags and optimizations to pages",
+			PluginAuthor:      "Example Author",
+		},
+	}
+}
+
+// Hooks returns the hooks this plugin provides
+func (p *SEOPlugin) Hooks() map[string]plugin.HookHandler {
+	return map[string]plugin.HookHandler{
+		"before_render":     p.beforeRender,
+		"after_render":      p.afterRender,
+		"page_head":         p.pageHead,
+		"http_headers":      p.httpHeaders,
+		"content_filter":    p.contentFilter,
+		"sitemap_generate":  p.sitemapGenerate,
+	}
+}
+
+// beforeRender is called before a page is rendered
+func (p *SEOPlugin) beforeRender(data interface{}) (interface{}, error) {
+	// Modify data before rendering
+	if pageData, ok := data.(map[string]interface{}); ok {
+		// Add SEO-related data
+		pageData["seo_enabled"] = true
+		
+		// Set default meta description if not present
+		if _, exists := pageData["meta_description"]; !exists {
+			pageData["meta_description"] = "Welcome to our website powered by Obtura"
+		}
+		
+		log.Printf("[SEO Plugin] Enhanced page data with SEO fields")
+		return pageData, nil
+	}
+	
+	return data, nil
+}
+
+// afterRender modifies the rendered HTML
+func (p *SEOPlugin) afterRender(data interface{}) (interface{}, error) {
+	if html, ok := data.(string); ok {
+		// Add canonical URL if not present
+		if !strings.Contains(html, `rel="canonical"`) {
+			canonicalTag := `<link rel="canonical" href="https://example.com/current-page" />`
+			html = strings.Replace(html, "</head>", canonicalTag+"\n</head>", 1)
+		}
+		
+		// Add structured data
+		structuredData := `
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Page Title",
+  "description": "Page description"
+}
+</script>`
+		html = strings.Replace(html, "</head>", structuredData+"\n</head>", 1)
+		
+		log.Printf("[SEO Plugin] Added canonical URL and structured data")
+		return html, nil
+	}
+	
+	return data, nil
+}
+
+// pageHead adds content to the <head> section of pages
+func (p *SEOPlugin) pageHead(data interface{}) (interface{}, error) {
+	headContent := `
+<!-- SEO Meta Tags -->
+<meta name="robots" content="index, follow" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Obtura Site" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<!-- SEO Plugin Styles -->
+<style>
+  /* Ensure images have alt text indicator */
+  img:not([alt])::after {
+    content: " [Missing Alt Text]";
+    color: red;
+    font-weight: bold;
+  }
+</style>
+`
+	
+	return headContent, nil
+}
+
+// httpHeaders adds SEO-related HTTP headers
+func (p *SEOPlugin) httpHeaders(data interface{}) (interface{}, error) {
+	if headers, ok := data.(http.Header); ok {
+		// Add X-Robots-Tag header
+		headers.Set("X-Robots-Tag", "index, follow")
+		
+		// Add Link header for DNS prefetch
+		headers.Add("Link", "<https://cdn.example.com>; rel=dns-prefetch")
+		
+		log.Printf("[SEO Plugin] Added SEO HTTP headers")
+		return headers, nil
+	}
+	
+	return data, nil
+}
+
+// contentFilter processes content before it's saved
+func (p *SEOPlugin) contentFilter(data interface{}) (interface{}, error) {
+	if content, ok := data.(map[string]interface{}); ok {
+		// Auto-generate meta description from content if not provided
+		if body, hasBody := content["body"].(string); hasBody {
+			if _, hasDesc := content["meta_description"]; !hasDesc {
+				// Extract first 160 characters as meta description
+				desc := strings.TrimSpace(body)
+				if len(desc) > 160 {
+					desc = desc[:157] + "..."
+				}
+				content["meta_description"] = desc
+			}
+			
+			// Generate slug from title if not provided
+			if title, hasTitle := content["title"].(string); hasTitle {
+				if _, hasSlug := content["slug"]; !hasSlug {
+					slug := strings.ToLower(title)
+					slug = strings.ReplaceAll(slug, " ", "-")
+					slug = strings.ReplaceAll(slug, "'", "")
+					slug = strings.ReplaceAll(slug, "\"", "")
+					content["slug"] = slug
+				}
+			}
+		}
+		
+		log.Printf("[SEO Plugin] Processed content with SEO enhancements")
+		return content, nil
+	}
+	
+	return data, nil
+}
+
+// sitemapGenerate contributes to sitemap generation
+func (p *SEOPlugin) sitemapGenerate(data interface{}) (interface{}, error) {
+	if entries, ok := data.([]map[string]interface{}); ok {
+		// Add additional sitemap entries
+		seoPages := []map[string]interface{}{
+			{
+				"loc":        "/seo-guide",
+				"changefreq": "weekly",
+				"priority":   "0.8",
+			},
+			{
+				"loc":        "/site-map",
+				"changefreq": "monthly",
+				"priority":   "0.6",
+			},
+		}
+		
+		entries = append(entries, seoPages...)
+		log.Printf("[SEO Plugin] Added %d entries to sitemap", len(seoPages))
+		
+		return entries, nil
+	}
+	
+	return data, nil
+}
+
+// Initialize sets up the SEO plugin
+func (p *SEOPlugin) Initialize(ctx context.Context) error {
+	log.Printf("[SEO Plugin] Initializing with hooks: %v", p.Hooks())
+	return nil
+}
+
+// Start begins the SEO plugin operation
+func (p *SEOPlugin) Start(ctx context.Context) error {
+	return nil
+}
+
+// Stop halts the SEO plugin
+func (p *SEOPlugin) Stop(ctx context.Context) error {
+	return nil
+}
+
+// Config returns the SEO plugin configuration
+func (p *SEOPlugin) Config() interface{} {
+	return struct {
+		EnableCanonical   bool   `json:"enable_canonical" schema:"title:Enable Canonical URLs,description:Automatically add canonical URLs to pages"`
+		EnableStructured  bool   `json:"enable_structured" schema:"title:Enable Structured Data,description:Add JSON-LD structured data"`
+		EnableOpenGraph   bool   `json:"enable_open_graph" schema:"title:Enable Open Graph,description:Add Open Graph meta tags"`
+		EnableTwitterCard bool   `json:"enable_twitter_card" schema:"title:Enable Twitter Cards,description:Add Twitter Card meta tags"`
+		SiteName         string `json:"site_name" schema:"title:Site Name,description:Your site name for meta tags"`
+		TwitterHandle    string `json:"twitter_handle" schema:"title:Twitter Handle,description:Your Twitter username (without @)"`
+		DefaultImage     string `json:"default_image" schema:"title:Default Image URL,description:Default image for social sharing"`
+	}{
+		EnableCanonical:   true,
+		EnableStructured:  true,
+		EnableOpenGraph:   true,
+		EnableTwitterCard: true,
+		SiteName:         "My Obtura Site",
+		TwitterHandle:    "",
+		DefaultImage:     "/static/images/default-share.jpg",
+	}
+}
+
+// DefaultConfig returns default configuration
+func (p *SEOPlugin) DefaultConfig() interface{} {
+	return p.Config()
+}
+
+// Example usage of hooks from another plugin:
+/*
+func triggerHooks(registry *plugin.Registry) {
+	// Trigger a hook
+	result, err := registry.TriggerHook("before_render", map[string]interface{}{
+		"title": "My Page",
+		"content": "Page content",
+	})
+	
+	if err != nil {
+		log.Printf("Hook error: %v", err)
+		return
+	}
+	
+	// Use the modified data
+	modifiedData := result.(map[string]interface{})
+	fmt.Printf("Modified title: %v\n", modifiedData["title"])
+}
+*/

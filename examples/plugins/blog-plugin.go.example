@@ -1,0 +1,142 @@
+package examples
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/a-h/templ"
+	"github.com/btassone/obtura/pkg/plugin"
+)
+
+// BlogPlugin demonstrates a routable plugin with pages
+type BlogPlugin struct {
+	plugin.BasePlugin
+}
+
+// NewBlogPlugin creates a new blog plugin instance
+func NewBlogPlugin() *BlogPlugin {
+	return &BlogPlugin{
+		BasePlugin: plugin.BasePlugin{
+			PluginID:          "com.example.blog",
+			PluginName:        "Blog Plugin",
+			PluginVersion:     "1.0.0",
+			PluginDescription: "A simple blog plugin that adds blog functionality",
+			PluginAuthor:      "Example Author",
+		},
+	}
+}
+
+// Routes returns the routes this plugin provides
+func (p *BlogPlugin) Routes() []plugin.Route {
+	return []plugin.Route{
+		{
+			Method:  http.MethodGet,
+			Path:    "/blog",
+			Handler: http.HandlerFunc(p.handleBlogList),
+			Middlewares: []plugin.Middleware{
+				// Add any route-specific middleware here
+			},
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/blog/{slug}",
+			Handler: http.HandlerFunc(p.handleBlogPost),
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/api/blog/posts",
+			Handler: http.HandlerFunc(p.handleAPIBlogPosts),
+		},
+	}
+}
+
+// handleBlogList handles the blog listing page
+func (p *BlogPlugin) handleBlogList(w http.ResponseWriter, r *http.Request) {
+	// In a real implementation, you would fetch posts from the database
+	posts := []BlogPost{
+		{
+			Title:   "Welcome to Obtura",
+			Slug:    "welcome-to-obtura",
+			Excerpt: "Learn about the Obtura framework and its plugin system.",
+			Author:  "Admin",
+		},
+		{
+			Title:   "Building Plugins",
+			Slug:    "building-plugins",
+			Excerpt: "A guide to creating your own Obtura plugins.",
+			Author:  "Developer",
+		},
+	}
+	
+	component := blogListPage(posts)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// handleBlogPost handles individual blog post pages
+func (p *BlogPlugin) handleBlogPost(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+	
+	// In a real implementation, fetch the post from database
+	post := BlogPost{
+		Title:   "Sample Blog Post",
+		Slug:    slug,
+		Content: "This is the full content of the blog post. In a real implementation, this would be fetched from the database based on the slug.",
+		Author:  "Admin",
+	}
+	
+	component := blogPostPage(post)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// handleAPIBlogPosts provides a JSON API for blog posts
+func (p *BlogPlugin) handleAPIBlogPosts(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`[
+		{"title": "Post 1", "slug": "post-1"},
+		{"title": "Post 2", "slug": "post-2"}
+	]`))
+}
+
+// BlogPost represents a blog post
+type BlogPost struct {
+	Title   string
+	Slug    string
+	Excerpt string
+	Content string
+	Author  string
+}
+
+// Initialize sets up the plugin
+func (p *BlogPlugin) Initialize(ctx context.Context) error {
+	// Initialize database tables, etc.
+	return nil
+}
+
+// Start begins plugin operation
+func (p *BlogPlugin) Start(ctx context.Context) error {
+	return nil
+}
+
+// Stop halts plugin operation
+func (p *BlogPlugin) Stop(ctx context.Context) error {
+	return nil
+}
+
+// Config returns the plugin configuration
+func (p *BlogPlugin) Config() interface{} {
+	return struct {
+		PostsPerPage int    `json:"posts_per_page" schema:"title:Posts Per Page,description:Number of posts to show per page"`
+		EnableRSS    bool   `json:"enable_rss" schema:"title:Enable RSS Feed,description:Enable RSS feed generation"`
+		DefaultAuthor string `json:"default_author" schema:"title:Default Author,description:Default author name for posts"`
+	}{
+		PostsPerPage: 10,
+		EnableRSS:    true,
+		DefaultAuthor: "Admin",
+	}
+}
+
+// DefaultConfig returns default configuration
+func (p *BlogPlugin) DefaultConfig() interface{} {
+	return p.Config()
+}

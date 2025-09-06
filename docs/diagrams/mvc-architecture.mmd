@@ -1,0 +1,50 @@
+graph LR
+    subgraph "Model Layer"
+        Models[Models]
+        Repos[Repositories]
+        Services[Services]
+        DTOs[Data Transfer Objects]
+        
+        Models --> Repos
+        Repos --> Services
+        Services --> DTOs
+    end
+
+    subgraph "View Layer"
+        Templates[Templ Components]
+        Layouts[Layout System]
+        Partials[Partial Views]
+        ViewModels[View Models]
+        
+        Templates --> Layouts
+        Templates --> Partials
+        Templates --> ViewModels
+    end
+
+    subgraph "Controller Layer"
+        Controllers[Controllers]
+        Actions[Action Methods]
+        Filters[Action Filters]
+        Validators[Input Validators]
+        
+        Controllers --> Actions
+        Actions --> Filters
+        Actions --> Validators
+    end
+
+    subgraph "Request Flow"
+        Request[HTTP Request]
+        Router[Router]
+        Middleware[Middleware]
+        Response[HTTP Response]
+        
+        Request --> Router
+        Router --> Middleware
+        Middleware --> Controllers
+    end
+
+    Controllers --> Services
+    Services --> Models
+    Controllers --> ViewModels
+    ViewModels --> Templates
+    Templates --> Response

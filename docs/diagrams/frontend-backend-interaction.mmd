@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant User
+    participant Browser
+    participant HTMX
+    participant Alpine
+    participant Server
+    participant Templ
+    participant DB
+
+    User->>Browser: Interact with UI
+    
+    alt Form Submission
+        Browser->>Alpine: Validate Form
+        Alpine->>HTMX: Submit via HTMX
+        HTMX->>Server: POST Request
+        Server->>DB: Process Data
+        DB->>Server: Result
+        Server->>Templ: Render Response
+        Templ->>HTMX: HTML Fragment
+        HTMX->>Browser: Update DOM
+        Browser->>Alpine: Trigger Events
+    else Navigation
+        Browser->>HTMX: Click Link
+        HTMX->>Server: GET Request
+        Server->>Templ: Render Page/Partial
+        Templ->>HTMX: HTML Response
+        HTMX->>Browser: Update DOM
+        Browser->>Browser: Update URL
+    else Real-time Updates
+        Server->>Server: SSE Event
+        Server->>HTMX: Server-Sent Event
+        HTMX->>Browser: Update DOM
+        Browser->>Alpine: Update State
+    end

@@ -1,0 +1,183 @@
+package adminpages
+
+import (
+	"github.com/btassone/obtura/web/templates/admin/layout"
+	"github.com/btassone/obtura/internal/models"
+)
+
+templ AdminDashboard(user *models.User) {
+	@adminlayout.AdminBase("Dashboard", user) {
+		<div class="mb-8">
+				<h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+				<p class="mt-1 text-sm text-gray-600">Welcome to your Obtura admin panel</p>
+			</div>
+
+			<!-- Stats Grid -->
+			<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+				@StatCard("Total Pages", "12", "text-blue-600", pageStatsIcon())
+				@StatCard("Active Plugins", "8", "text-green-600", pluginStatsIcon())
+				@StatCard("Users", "245", "text-indigo-600", userStatsIcon())
+				@StatCard("Themes", "3", "text-purple-600", themeStatsIcon())
+			</div>
+
+			<!-- Recent Activity -->
+			<div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+				<div class="bg-white overflow-hidden shadow rounded-lg">
+					<div class="px-4 py-5 sm:p-6">
+						<h3 class="text-lg leading-6 font-medium text-gray-900">Recent Pages</h3>
+						<div class="mt-5">
+							<ul class="divide-y divide-gray-200">
+								@RecentPageItem("About Us", "Modified 2 hours ago", "/admin/pages/edit/1")
+								@RecentPageItem("Contact", "Modified 5 hours ago", "/admin/pages/edit/2")
+								@RecentPageItem("Services", "Modified 1 day ago", "/admin/pages/edit/3")
+								@RecentPageItem("Blog Post: Getting Started", "Modified 2 days ago", "/admin/pages/edit/4")
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-white overflow-hidden shadow rounded-lg">
+					<div class="px-4 py-5 sm:p-6">
+						<h3 class="text-lg leading-6 font-medium text-gray-900">System Health</h3>
+						<div class="mt-5 space-y-4">
+							@HealthItem("Database", "Connected", true)
+							@HealthItem("Cache", "Active", true)
+							@HealthItem("File Storage", "95% Used", false)
+							@HealthItem("Memory Usage", "2.1GB / 4GB", true)
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Quick Actions -->
+			<div class="mt-8">
+				<h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+					@QuickActionCard("New Page", "Create a new page", "/admin/pages/new", newPageIcon())
+					@QuickActionCard("Upload Media", "Upload images or files", "/admin/media/upload", uploadIcon())
+					@QuickActionCard("Manage Users", "Add or edit users", "/admin/users", manageUsersIcon())
+					@QuickActionCard("Site Settings", "Configure your site", "/admin/settings", siteSettingsIcon())
+				</div>
+			</div>
+	}
+}
+
+templ StatCard(title, value, colorClass string, icon templ.Component) {
+	<div class="bg-white overflow-hidden shadow rounded-lg">
+		<div class="px-4 py-5 sm:p-6">
+			<div class="flex items-center">
+				<div class="flex-shrink-0">
+					<div class={ "rounded-md p-3", colorClass, "bg-opacity-10" }>
+						@icon
+					</div>
+				</div>
+				<div class="ml-5 w-0 flex-1">
+					<dt class="text-sm font-medium text-gray-500 truncate">{ title }</dt>
+					<dd class="mt-1 text-3xl font-semibold text-gray-900">{ value }</dd>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ RecentPageItem(title, modified, href string) {
+	<li class="py-3">
+		<div class="flex items-center justify-between">
+			<div class="flex-1 min-w-0">
+				<p class="text-sm font-medium text-gray-900 truncate">{ title }</p>
+				<p class="text-sm text-gray-500">{ modified }</p>
+			</div>
+			<a href={ templ.SafeURL(href) } class="ml-4 flex-shrink-0">
+				<svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+				</svg>
+			</a>
+		</div>
+	</li>
+}
+
+templ HealthItem(name, status string, isHealthy bool) {
+	<div class="flex items-center justify-between">
+		<span class="text-sm font-medium text-gray-900">{ name }</span>
+		<div class="flex items-center">
+			if isHealthy {
+			<span class="text-sm text-green-600">{ status }</span>
+		} else {
+			<span class="text-sm text-yellow-600">{ status }</span>
+		}
+			if isHealthy {
+				<svg class="ml-2 h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+				</svg>
+			} else {
+				<svg class="ml-2 h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+				</svg>
+			}
+		</div>
+	</div>
+}
+
+templ QuickActionCard(title, description, href string, icon templ.Component) {
+	<a href={ templ.SafeURL(href) } 
+	   class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+		<div class="flex-shrink-0">
+			@icon
+		</div>
+		<div class="flex-1 min-w-0">
+			<span class="absolute inset-0" aria-hidden="true"></span>
+			<p class="text-sm font-medium text-gray-900">{ title }</p>
+			<p class="text-sm text-gray-500 truncate">{ description }</p>
+		</div>
+	</a>
+}
+
+// Icon components for stats
+templ pageStatsIcon() {
+	<svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+	</svg>
+}
+
+templ pluginStatsIcon() {
+	<svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+	</svg>
+}
+
+templ userStatsIcon() {
+	<svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+	</svg>
+}
+
+templ themeStatsIcon() {
+	<svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+	</svg>
+}
+
+// Quick action icons
+templ newPageIcon() {
+	<svg class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+	</svg>
+}
+
+templ uploadIcon() {
+	<svg class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+	</svg>
+}
+
+templ manageUsersIcon() {
+	<svg class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+	</svg>
+}
+
+templ siteSettingsIcon() {
+	<svg class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+	</svg>
+}

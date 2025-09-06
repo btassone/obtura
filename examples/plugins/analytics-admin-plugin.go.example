@@ -1,0 +1,273 @@
+package examples
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"time"
+
+	"github.com/a-h/templ"
+	"github.com/btassone/obtura/pkg/plugin"
+)
+
+// AnalyticsPlugin demonstrates an admin plugin with dashboard and settings
+type AnalyticsPlugin struct {
+	plugin.BasePlugin
+	stats AnalyticsStats
+}
+
+// AnalyticsStats holds analytics data
+type AnalyticsStats struct {
+	PageViews      int64
+	UniqueVisitors int64
+	AvgSessionTime string
+	TopPages       []PageStats
+	LastUpdated    time.Time
+}
+
+// PageStats represents statistics for a single page
+type PageStats struct {
+	Path  string
+	Views int64
+}
+
+// NewAnalyticsPlugin creates a new analytics plugin instance
+func NewAnalyticsPlugin() *AnalyticsPlugin {
+	return &AnalyticsPlugin{
+		BasePlugin: plugin.BasePlugin{
+			PluginID:          "com.example.analytics",
+			PluginName:        "Analytics Dashboard",
+			PluginVersion:     "1.0.0",
+			PluginDescription: "Track and display website analytics in the admin panel",
+			PluginAuthor:      "Example Author",
+		},
+		stats: AnalyticsStats{
+			PageViews:      1234,
+			UniqueVisitors: 567,
+			AvgSessionTime: "3m 45s",
+			TopPages: []PageStats{
+				{Path: "/", Views: 523},
+				{Path: "/blog", Views: 234},
+				{Path: "/about", Views: 156},
+			},
+			LastUpdated: time.Now(),
+		},
+	}
+}
+
+// AdminRoutes returns admin panel routes
+func (p *AnalyticsPlugin) AdminRoutes() []plugin.Route {
+	return []plugin.Route{
+		{
+			Method:  http.MethodGet,
+			Path:    "/analytics",
+			Handler: http.HandlerFunc(p.handleDashboard),
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/analytics/settings",
+			Handler: http.HandlerFunc(p.handleSettings),
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/analytics/settings",
+			Handler: http.HandlerFunc(p.handleSettingsUpdate),
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/analytics/api/stats",
+			Handler: http.HandlerFunc(p.handleAPIStats),
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/analytics/api/track",
+			Handler: http.HandlerFunc(p.handleAPITrack),
+		},
+	}
+}
+
+// handleDashboard displays the analytics dashboard
+func (p *AnalyticsPlugin) handleDashboard(w http.ResponseWriter, r *http.Request) {
+	// In a real implementation, fetch current stats from database
+	component := analyticsDashboard(p.stats)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// handleSettings displays analytics settings page
+func (p *AnalyticsPlugin) handleSettings(w http.ResponseWriter, r *http.Request) {
+	// Get current configuration
+	config := p.Config()
+	component := analyticsSettings(config)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// handleSettingsUpdate processes settings form submission
+func (p *AnalyticsPlugin) handleSettingsUpdate(w http.ResponseWriter, r *http.Request) {
+	// Parse form data
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+	
+	// Update configuration
+	// In a real implementation, save to database
+	
+	// Redirect back to settings
+	http.Redirect(w, r, "/admin/analytics/settings", http.StatusSeeOther)
+}
+
+// handleAPIStats provides analytics data via JSON API
+func (p *AnalyticsPlugin) handleAPIStats(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(p.stats)
+}
+
+// handleAPITrack tracks analytics events
+func (p *AnalyticsPlugin) handleAPITrack(w http.ResponseWriter, r *http.Request) {
+	var event struct {
+		Type string `json:"type"`
+		Path string `json:"path"`
+		Data map[string]interface{} `json:"data"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	
+	// Process tracking event
+	// In a real implementation, store in database
+	p.stats.PageViews++
+	
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "tracked"})
+}
+
+// Routes for public tracking endpoints
+func (p *AnalyticsPlugin) Routes() []plugin.Route {
+	return []plugin.Route{
+		{
+			Method:  http.MethodGet,
+			Path:    "/analytics.js",
+			Handler: http.HandlerFunc(p.handleTrackingScript),
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/api/analytics/track",
+			Handler: http.HandlerFunc(p.handlePublicTrack),
+		},
+	}
+}
+
+// handleTrackingScript serves the analytics JavaScript
+func (p *AnalyticsPlugin) handleTrackingScript(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/javascript")
+	w.Write([]byte(`
+(function() {
+  // Simple analytics tracking script
+  function trackPageView() {
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        type: 'pageview',
+        path: window.location.pathname,
+        referrer: document.referrer
+      })
+    });
+  }
+  
+  // Track on page load
+  trackPageView();
+  
+  // Track on navigation (for SPAs)
+  if (window.history && window.history.pushState) {
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function() {
+      originalPushState.apply(window.history, arguments);
+      trackPageView();
+    };
+  }
+})();
+`))
+}
+
+// handlePublicTrack handles public tracking requests
+func (p *AnalyticsPlugin) handlePublicTrack(w http.ResponseWriter, r *http.Request) {
+	// Process tracking data
+	// In a real implementation, validate and store data
+	
+	// Set CORS headers if needed
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// Initialize sets up the analytics plugin
+func (p *AnalyticsPlugin) Initialize(ctx context.Context) error {
+	// Create database tables, etc.
+	return nil
+}
+
+// Start begins analytics tracking
+func (p *AnalyticsPlugin) Start(ctx context.Context) error {
+	// Start background workers for processing analytics
+	go p.processAnalytics(ctx)
+	return nil
+}
+
+// processAnalytics runs background analytics processing
+func (p *AnalyticsPlugin) processAnalytics(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// Process queued analytics events
+			// Update statistics
+			p.stats.LastUpdated = time.Now()
+		}
+	}
+}
+
+// Stop halts analytics tracking
+func (p *AnalyticsPlugin) Stop(ctx context.Context) error {
+	return nil
+}
+
+// Config returns analytics configuration
+func (p *AnalyticsPlugin) Config() interface{} {
+	return struct {
+		Enabled          bool   `json:"enabled" schema:"title:Enable Analytics,description:Enable analytics tracking"`
+		TrackingID       string `json:"tracking_id" schema:"title:Tracking ID,description:Your analytics tracking ID"`
+		ExcludeAdmins    bool   `json:"exclude_admins" schema:"title:Exclude Admins,description:Don't track admin users"`
+		AnonymizeIP      bool   `json:"anonymize_ip" schema:"title:Anonymize IP,description:Anonymize visitor IP addresses"`
+		SampleRate       int    `json:"sample_rate" schema:"title:Sample Rate %,description:Percentage of visitors to track (1-100)"`
+		SessionTimeout   int    `json:"session_timeout" schema:"title:Session Timeout (minutes),description:Minutes of inactivity before new session"`
+		RetentionDays    int    `json:"retention_days" schema:"title:Data Retention (days),description:How long to keep analytics data"`
+		EnableRealtime   bool   `json:"enable_realtime" schema:"title:Enable Realtime,description:Show realtime visitor data"`
+		EnableHeatmaps   bool   `json:"enable_heatmaps" schema:"title:Enable Heatmaps,description:Track click and scroll heatmaps"`
+		CustomDimensions []struct {
+			Name  string `json:"name" schema:"title:Dimension Name"`
+			Value string `json:"value" schema:"title:Dimension Value"`
+		} `json:"custom_dimensions" schema:"title:Custom Dimensions,description:Additional tracking dimensions"`
+	}{
+		Enabled:        true,
+		TrackingID:     "UA-000000-01",
+		ExcludeAdmins:  true,
+		AnonymizeIP:    true,
+		SampleRate:     100,
+		SessionTimeout: 30,
+		RetentionDays:  90,
+		EnableRealtime: true,
+		EnableHeatmaps: false,
+	}
+}
+
+// DefaultConfig returns default configuration
+func (p *AnalyticsPlugin) DefaultConfig() interface{} {
+	return p.Config()
+}

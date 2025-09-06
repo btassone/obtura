@@ -1,0 +1,73 @@
+package layout
+
+import "os"
+
+templ Base(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } - Obtura</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<link rel="icon" type="image/x-icon" href="/static/favicon.ico"/>
+		</head>
+		<body hx-ext="head-support" class="bg-gray-50 text-gray-900">
+			<div class="min-h-screen flex flex-col">
+				{ children... }
+			</div>
+			if mode := os.Getenv("MODE"); mode == "dev" || mode == "" {
+				<script>
+					// Air live reload
+					(function() {
+						let ws;
+						const connectWS = () => {
+							ws = new WebSocket('ws://localhost:3000/ws');
+							ws.onmessage = (event) => {
+								if (event.data === 'reload') {
+									window.location.reload();
+								}
+							};
+							ws.onclose = () => {
+								setTimeout(connectWS, 1000);
+							};
+						};
+						connectWS();
+					})();
+				</script>
+			}
+		</body>
+	</html>
+}
+
+templ Header() {
+	<header class="bg-white shadow-sm">
+		<nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="flex h-16 items-center justify-between">
+				<div class="flex items-center">
+					<h1 class="text-xl font-semibold">Obtura</h1>
+				</div>
+				<div class="hidden md:block">
+					<div class="ml-10 flex items-baseline space-x-4">
+						<a href="/" class="text-gray-900 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+						<a href="/about" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">About</a>
+						<a href="/docs" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">Docs</a>
+					</div>
+				</div>
+			</div>
+		</nav>
+	</header>
+}
+
+templ Footer() {
+	<footer class="bg-white mt-auto">
+		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+			<p class="text-center text-sm text-gray-500">
+				© 2024 Obtura. Built with Go, Templ, and HTMX.
+			</p>
+		</div>
+	</footer>
+}

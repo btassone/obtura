@@ -1,0 +1,44 @@
+package adminpages
+
+import (
+	"github.com/btassone/obtura/internal/models"
+	"github.com/btassone/obtura/web/templates/admin/layout"
+)
+
+templ ThemesList(user *models.User) {
+	@adminlayout.AdminBase("Themes", user) {
+		<div class="mb-8">
+			<h1 class="text-2xl font-semibold text-gray-900">Themes</h1>
+			<p class="mt-1 text-sm text-gray-600">Choose and customize your site's appearance</p>
+		</div>
+
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+			@ThemeCard("Default Theme", "Clean and modern design", "/static/themes/default-preview.png", true, "default")
+			@ThemeCard("Dark Theme", "Elegant dark mode theme", "/static/themes/dark-preview.png", false, "dark")
+			@ThemeCard("Minimal Theme", "Simple and focused", "/static/themes/minimal-preview.png", false, "minimal")
+		</div>
+	}
+}
+
+templ ThemeCard(name, description, preview string, isActive bool, themeId string) {
+	<div class="bg-white overflow-hidden shadow rounded-lg">
+		<div class="aspect-w-16 aspect-h-9 bg-gray-200">
+			<img src={ preview } alt={ name + " preview" } class="object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2UyZThmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM2Yjc5OGYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPlRoZW1lIFByZXZpZXc8L3RleHQ+PC9zdmc+'"/>
+		</div>
+		<div class="px-4 py-5 sm:p-6">
+			<h3 class="text-lg font-medium text-gray-900">{ name }</h3>
+			<p class="mt-1 text-sm text-gray-500">{ description }</p>
+			<div class="mt-4">
+				if isActive {
+					<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+						Active
+					</span>
+				} else {
+					<button class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+						Activate
+					</button>
+				}
+			</div>
+		</div>
+	</div>
+}

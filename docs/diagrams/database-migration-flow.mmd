@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant CLI
+    participant MigrationCmd
+    participant MigrationRunner
+    participant SchemaBuilder
+    participant Database
+    participant MigrationTable
+
+    CLI->>MigrationCmd: obtura migrate:up
+    MigrationCmd->>MigrationRunner: Run pending migrations
+    MigrationRunner->>MigrationTable: Check applied migrations
+    MigrationTable->>MigrationRunner: List of applied
+    
+    loop For each pending migration
+        MigrationRunner->>MigrationRunner: Load migration file
+        MigrationRunner->>SchemaBuilder: Parse schema changes
+        SchemaBuilder->>Database: Execute DDL statements
+        Database->>SchemaBuilder: Success/Error
+        
+        alt Migration successful
+            SchemaBuilder->>MigrationTable: Record migration
+            MigrationTable->>MigrationRunner: Confirmed
+        else Migration failed
+            SchemaBuilder->>MigrationRunner: Rollback transaction
+            MigrationRunner->>CLI: Report error
+        end
+    end
+    
+    MigrationRunner->>CLI: Migration complete

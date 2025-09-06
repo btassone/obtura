@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant CLI
+    participant SeederCmd
+    participant SeederRunner
+    participant Factories
+    participant Faker
+    participant Database
+
+    CLI->>SeederCmd: obtura db:seed
+    SeederCmd->>SeederRunner: Run seeders
+    
+    loop For each seeder
+        SeederRunner->>SeederRunner: Load seeder class
+        SeederRunner->>Factories: Request model instances
+        Factories->>Faker: Generate fake data
+        Faker->>Factories: Random data
+        Factories->>SeederRunner: Model instances
+        SeederRunner->>Database: Insert records
+        Database->>SeederRunner: Success/Error
+    end
+    
+    SeederRunner->>CLI: Seeding complete

@@ -1,0 +1,23 @@
+graph TB
+    subgraph "Layout Components"
+        Base[Base Layout Interface]
+        Base --> Header[Header Component]
+        Base --> Nav[Navigation Component]
+        Base --> Content[Content Slot]
+        Base --> Sidebar[Sidebar Component]
+        Base --> Footer[Footer Component]
+    end
+
+    subgraph "Layout Registry"
+        Registry[Layout Registry]
+        Registry --> Default[Default Layout]
+        Registry --> Admin[Admin Layout]
+        Registry --> Custom[Custom Layouts]
+    end
+
+    subgraph "Page Rendering"
+        Page[Page Component]
+        Page --> SelectLayout[Select Layout]
+        SelectLayout --> Registry
+        Registry --> Render[Render with Layout]
+    end

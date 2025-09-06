@@ -1,0 +1,184 @@
+package adminlayout
+
+import (
+	"os"
+	"github.com/btassone/obtura/internal/models"
+)
+
+templ AdminBase(title string, user *models.User) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } - Obtura Admin</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<link rel="icon" type="image/x-icon" href="/static/favicon.ico"/>
+		</head>
+		<body hx-ext="head-support" class="bg-gray-100" x-data="{ sidebarOpen: false }">
+			<div class="flex h-screen overflow-hidden">
+				@AdminSidebar()
+				<div class="flex-1 flex flex-col overflow-hidden">
+					@AdminHeader(user)
+					<main class="flex-1 overflow-y-auto bg-gray-50">
+						<div class="container mx-auto px-6 py-8">
+							{ children... }
+						</div>
+					</main>
+				</div>
+			</div>
+			if mode := os.Getenv("MODE"); mode == "dev" || mode == "" {
+				<script>
+					// Air live reload
+					(function() {
+						let ws;
+						const connectWS = () => {
+							ws = new WebSocket('ws://localhost:3000/ws');
+							ws.onmessage = (event) => {
+								if (event.data === 'reload') {
+									window.location.reload();
+								}
+							};
+							ws.onclose = () => {
+								setTimeout(connectWS, 1000);
+							};
+						};
+						connectWS();
+					})();
+				</script>
+			}
+		</body>
+	</html>
+}
+
+templ AdminSidebar() {
+	<!-- Desktop Sidebar -->
+	<div class="hidden md:flex md:flex-shrink-0">
+		<div class="flex flex-col w-64 bg-gray-800">
+			<div class="flex items-center h-16 flex-shrink-0 px-4 bg-gray-900">
+				<h1 class="text-xl font-semibold text-white">Obtura Admin</h1>
+			</div>
+			<div class="flex-1 flex flex-col overflow-y-auto">
+				<nav class="flex-1 px-2 py-4 space-y-1">
+					@AdminNavItem("/admin", "Dashboard", dashboardIcon())
+					@AdminNavItem("/admin/pages", "Pages", pagesIcon())
+					@AdminNavItem("/admin/themes", "Themes", themesIcon())
+					@AdminNavItem("/admin/plugins", "Plugins", pluginsIcon())
+					@AdminNavItem("/admin/users", "Users", usersIcon())
+					@AdminNavItem("/admin/settings", "Settings", settingsIcon())
+				</nav>
+			</div>
+		</div>
+	</div>
+
+	<!-- Mobile Sidebar -->
+	<div class="md:hidden" x-show="sidebarOpen" x-cloak>
+		<div class="fixed inset-0 z-40 flex">
+			<div class="fixed inset-0 bg-gray-600 bg-opacity-75" @click="sidebarOpen = false"></div>
+			<div class="relative flex-1 flex flex-col max-w-xs w-full bg-gray-800">
+				<div class="absolute top-0 right-0 -mr-12 pt-2">
+					<button @click="sidebarOpen = false" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+						<svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+						</svg>
+					</button>
+				</div>
+				<div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+					<div class="flex-shrink-0 flex items-center px-4">
+						<h1 class="text-xl font-semibold text-white">Obtura Admin</h1>
+					</div>
+					<nav class="mt-5 px-2 space-y-1">
+						@AdminNavItem("/admin", "Dashboard", dashboardIcon())
+						@AdminNavItem("/admin/pages", "Pages", pagesIcon())
+						@AdminNavItem("/admin/themes", "Themes", themesIcon())
+						@AdminNavItem("/admin/plugins", "Plugins", pluginsIcon())
+						@AdminNavItem("/admin/users", "Users", usersIcon())
+						@AdminNavItem("/admin/settings", "Settings", settingsIcon())
+					</nav>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ AdminHeader(user *models.User) {
+	<header class="bg-white shadow-sm">
+		<div class="px-4 sm:px-6 lg:px-8">
+			<div class="flex items-center justify-between h-16">
+				<button @click="sidebarOpen = true" class="md:hidden text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600">
+					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+					</svg>
+				</button>
+				<div class="flex items-center">
+					<span class="text-gray-700 text-sm">
+						Welcome, { user.Name }
+					</span>
+				</div>
+				<div class="flex items-center space-x-4">
+					<a href="/" target="_blank" class="text-gray-500 hover:text-gray-700">
+						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+						</svg>
+					</a>
+					<form method="POST" action="/logout" class="inline">
+						<button type="submit" class="text-gray-500 hover:text-gray-700">
+							<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+							</svg>
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</header>
+}
+
+templ AdminNavItem(href, text string, icon templ.Component) {
+	<a href={ templ.SafeURL(href) } 
+	   class="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+		@icon
+		{ text }
+	</a>
+}
+
+// Icon components
+templ dashboardIcon() {
+	<svg class="mr-3 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+	</svg>
+}
+
+templ pagesIcon() {
+	<svg class="mr-3 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+	</svg>
+}
+
+templ themesIcon() {
+	<svg class="mr-3 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+	</svg>
+}
+
+templ pluginsIcon() {
+	<svg class="mr-3 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+	</svg>
+}
+
+templ usersIcon() {
+	<svg class="mr-3 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+	</svg>
+}
+
+templ settingsIcon() {
+	<svg class="mr-3 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+	</svg>
+}

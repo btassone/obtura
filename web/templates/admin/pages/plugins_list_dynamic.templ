@@ -1,0 +1,83 @@
+package adminpages
+
+import (
+	"github.com/btassone/obtura/internal/types"
+	"github.com/btassone/obtura/internal/models"
+	"github.com/btassone/obtura/web/templates/admin/layout"
+)
+
+templ PluginsListWithData(user *models.User, plugins []types.PluginInfo) {
+	@adminlayout.AdminBase("Plugins", user) {
+		<div class="mb-8">
+			<div class="flex items-center justify-between">
+				<h1 class="text-2xl font-semibold text-gray-900">Plugins</h1>
+			</div>
+			<p class="mt-1 text-sm text-gray-600">Manage your site's plugins and extensions</p>
+		</div>
+
+		<div class="bg-white shadow overflow-hidden sm:rounded-lg">
+			if len(plugins) == 0 {
+				<div class="px-6 py-12 text-center text-gray-500">
+					No plugins installed
+				</div>
+			} else {
+				<ul class="divide-y divide-gray-200">
+					for _, plugin := range plugins {
+						@PluginItemDynamic(plugin)
+					}
+				</ul>
+			}
+		</div>
+	}
+}
+
+templ PluginItemDynamic(plugin types.PluginInfo) {
+	<li class="px-6 py-4">
+		<div class="flex items-center justify-between">
+			<div class="flex-1">
+				<div class="flex items-center">
+					<h3 class="text-sm font-medium text-gray-900">{ plugin.Name }</h3>
+					<span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+						v{ plugin.Version }
+					</span>
+					if plugin.IsCore {
+						<span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+							Core
+						</span>
+					}
+				</div>
+				<p class="mt-1 text-sm text-gray-500">{ plugin.Description }</p>
+				<p class="mt-1 text-xs text-gray-400">by { plugin.Author } • ID: { plugin.ID }</p>
+			</div>
+			<div class="ml-4 flex-shrink-0 flex items-center space-x-4">
+				if plugin.HasConfig {
+					<a href={ templ.SafeURL("/admin/plugins/" + plugin.ID + "/config") } 
+					   class="text-sm text-indigo-600 hover:text-indigo-900">
+						Configure
+					</a>
+				}
+				if plugin.IsCore {
+					<span class="text-sm text-gray-500">Always Active</span>
+				} else if plugin.IsActive {
+					<form method="POST" action={ templ.SafeURL("/admin/plugins/" + plugin.ID + "/toggle") } class="inline">
+						<button type="submit" 
+							class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 bg-indigo-600"
+							role="switch" 
+							aria-checked="true">
+							<span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+						</button>
+					</form>
+				} else {
+					<form method="POST" action={ templ.SafeURL("/admin/plugins/" + plugin.ID + "/toggle") } class="inline">
+						<button type="submit"
+							class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 bg-gray-200"
+							role="switch" 
+							aria-checked="false">
+							<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+						</button>
+					</form>
+				}
+			</div>
+		</div>
+	</li>
+}

@@ -1,0 +1,51 @@
+graph TB
+    subgraph "Client Browser"
+        HTML[HTML Document]
+        HTMX[HTMX Library]
+        Alpine[Alpine.js]
+        TW[Tailwind CSS]
+        
+        HTML --> HTMX
+        HTML --> Alpine
+        HTML --> TW
+    end
+
+    subgraph "Frontend Components"
+        Pages[Page Components]
+        Partials[HTMX Partials]
+        Forms[Form Components]
+        Navigation[Nav Components]
+        Modals[Modal Components]
+        
+        Pages --> Partials
+        Pages --> Forms
+        Pages --> Navigation
+        Pages --> Modals
+    end
+
+    subgraph "Client State"
+        LocalStorage[Local Storage]
+        SessionStorage[Session Storage]
+        URLState[URL State]
+        HTMXState[HTMX State]
+        
+        Alpine --> LocalStorage
+        Alpine --> SessionStorage
+        HTMX --> URLState
+        HTMX --> HTMXState
+    end
+
+    subgraph "Frontend Features"
+        PWA[Progressive Web App]
+        Offline[Offline Support]
+        Push[Push Notifications]
+        Theme[Theme Switching]
+        
+        PWA --> Offline
+        PWA --> Push
+        Alpine --> Theme
+    end
+
+    HTMX --> Pages
+    Alpine --> Forms
+    TW --> Pages

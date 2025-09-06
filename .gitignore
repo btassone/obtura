@@ -1,0 +1,88 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+obtura
+obtura-*
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Air temp files
+tmp/
+
+# Templ generated files
+*_templ.go
+*_templ.txt
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+
+# Node modules (if using npm for frontend tools)
+node_modules/
+
+# Log files
+*.log
+
+# Database files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+data/
+
+# Uploaded files
+uploads/
+storage/
+
+# Cache directories
+.cache/
+cache/
+
+# Generated documentation
+docs/_build/
+docs/generated/
+
+# Plugin configurations (contains user settings)
+/configs/plugins/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Binary files
+/bin/
+main
+
+# Example backup files
+*.txt.bak

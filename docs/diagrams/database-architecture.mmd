@@ -1,0 +1,63 @@
+graph TB
+    subgraph "Database Layer"
+        DBCore[Database Core]
+        ConnPool[Connection Pool]
+        QueryBuilder[Query Builder]
+        Migrations[Migration System]
+        Seeder[Database Seeder]
+        
+        DBCore --> ConnPool
+        DBCore --> QueryBuilder
+        DBCore --> Migrations
+        DBCore --> Seeder
+    end
+
+    subgraph "ORM/Models"
+        Model[Base Model]
+        Relations[Relationships]
+        Scopes[Query Scopes]
+        Events[Model Events]
+        Validation[Validation Rules]
+        
+        Model --> Relations
+        Model --> Scopes
+        Model --> Events
+        Model --> Validation
+    end
+
+    subgraph "Migration Components"
+        MigrationFiles[Migration Files]
+        MigrationRunner[Migration Runner]
+        SchemaBuilder[Schema Builder]
+        Rollback[Rollback System]
+        
+        MigrationFiles --> MigrationRunner
+        MigrationRunner --> SchemaBuilder
+        MigrationRunner --> Rollback
+    end
+
+    subgraph "Seeding System"
+        Seeders[Seeder Classes]
+        Factories[Model Factories]
+        Faker[Faker Data]
+        SeedRunner[Seed Runner]
+        
+        Seeders --> Factories
+        Factories --> Faker
+        Seeders --> SeedRunner
+    end
+
+    subgraph "Database Drivers"
+        PostgreSQL[PostgreSQL]
+        MySQL[MySQL]
+        SQLite[SQLite]
+        MSSQL[SQL Server]
+    end
+
+    DBCore --> Model
+    Migrations --> MigrationFiles
+    Seeder --> Seeders
+    ConnPool --> PostgreSQL
+    ConnPool --> MySQL
+    ConnPool --> SQLite
+    ConnPool --> MSSQL

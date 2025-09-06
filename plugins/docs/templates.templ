@@ -1,0 +1,444 @@
+package docs
+
+import (
+	"fmt"
+	"strings"
+)
+
+templ docsIndexPage(packages map[string]*PackageDoc) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Documentation - Obtura</title>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+		</head>
+		<body class="bg-gray-50">
+			<div class="min-h-screen flex">
+				<!-- Sidebar -->
+				<nav class="w-64 bg-white shadow-lg">
+					<div class="p-6">
+						<h1 class="text-2xl font-bold text-gray-900">Obtura Docs</h1>
+					</div>
+					<div class="px-6">
+						<ul class="space-y-2">
+							<li>
+								<a href="/docs" class="block px-4 py-2 text-gray-700 bg-gray-100 rounded">Overview</a>
+							</li>
+							<li>
+								<a href="/docs/api" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">API Reference</a>
+							</li>
+						</ul>
+					</div>
+				</nav>
+
+				<!-- Main content -->
+				<main class="flex-1 p-8">
+					<div class="max-w-4xl">
+						<h2 class="text-3xl font-bold mb-6">Documentation</h2>
+						
+						<!-- Search -->
+						<div class="mb-8">
+							<input type="search" 
+								   placeholder="Search documentation..." 
+								   class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+								   hx-get="/docs/search"
+								   hx-trigger="keyup changed delay:300ms"
+								   hx-target="#search-results"
+								   name="q"/>
+							<div id="search-results" class="mt-4"></div>
+						</div>
+
+						<!-- Overview -->
+						<div class="prose prose-lg max-w-none">
+							<h3 class="text-xl font-semibold mb-4">Welcome to Obtura Documentation</h3>
+							<p class="text-gray-600 mb-6">
+								This documentation is automatically generated from code comments in the Obtura codebase.
+								Use the navigation menu or search to find what you're looking for.
+							</p>
+
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+								<div class="bg-white p-6 rounded-lg shadow">
+									<h4 class="font-semibold mb-2">Getting Started</h4>
+									<ul class="list-disc list-inside text-gray-600 space-y-1">
+										<li><a href="/docs/api/pkg-plugin" class="text-indigo-600 hover:text-indigo-800">Plugin SDK</a></li>
+										<li><a href="/docs/api/internal-server" class="text-indigo-600 hover:text-indigo-800">Server Package</a></li>
+										<li><a href="/docs/api/pkg-database" class="text-indigo-600 hover:text-indigo-800">Database Utilities</a></li>
+									</ul>
+								</div>
+
+								<div class="bg-white p-6 rounded-lg shadow">
+									<h4 class="font-semibold mb-2">Core Concepts</h4>
+									<ul class="list-disc list-inside text-gray-600 space-y-1">
+										<li>Plugin Architecture</li>
+										<li>Routing System</li>
+										<li>Middleware Chain</li>
+										<li>Hook System</li>
+									</ul>
+								</div>
+							</div>
+
+							<div class="mt-8 p-4 bg-blue-50 rounded-lg">
+								<p class="text-sm text-blue-800">
+									<strong>Tip:</strong> Documentation is generated from Go doc comments. 
+									Make sure to document your code using standard Go documentation conventions.
+								</p>
+							</div>
+						</div>
+					</div>
+				</main>
+			</div>
+		</body>
+	</html>
+}
+
+templ apiReferencePage(packages []*PackageDoc) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>API Reference - Obtura</title>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+		</head>
+		<body class="bg-gray-50">
+			<div class="min-h-screen flex">
+				<!-- Sidebar -->
+				<nav class="w-64 bg-white shadow-lg">
+					<div class="p-6">
+						<h1 class="text-2xl font-bold text-gray-900">Obtura Docs</h1>
+					</div>
+					<div class="px-6">
+						<ul class="space-y-2">
+							<li>
+								<a href="/docs" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">Overview</a>
+							</li>
+							<li>
+								<a href="/docs/api" class="block px-4 py-2 text-gray-700 bg-gray-100 rounded">API Reference</a>
+							</li>
+						</ul>
+						
+						<h3 class="mt-6 mb-2 text-sm font-semibold text-gray-500 uppercase">Packages</h3>
+						<ul class="space-y-1">
+							for _, pkg := range packages {
+								<li>
+									<a href={ templ.SafeURL(fmt.Sprintf("/docs/api/%s", strings.ReplaceAll(pkg.ImportPath[2:], "/", "-"))) } 
+									   class="block px-4 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded">
+										{ pkg.Name }
+									</a>
+								</li>
+							}
+						</ul>
+					</div>
+				</nav>
+
+				<!-- Main content -->
+				<main class="flex-1 p-8">
+					<div class="max-w-4xl">
+						<h2 class="text-3xl font-bold mb-6">API Reference</h2>
+						
+						<div class="space-y-8">
+							for _, pkg := range packages {
+								<div class="bg-white p-6 rounded-lg shadow">
+									<h3 class="text-xl font-semibold mb-2">
+										<a href={ templ.SafeURL(fmt.Sprintf("/docs/api/%s", strings.ReplaceAll(pkg.ImportPath[2:], "/", "-"))) }
+										   class="text-gray-900 hover:text-indigo-600">
+											{ pkg.Name }
+										</a>
+									</h3>
+									<p class="text-sm text-gray-500 mb-2">{ pkg.ImportPath }</p>
+									<p class="text-gray-600">{ truncateDoc(pkg.Doc) }</p>
+									
+									<div class="mt-4 flex items-center space-x-6 text-sm text-gray-500">
+										<span>{ fmt.Sprintf("%d types", len(pkg.Types)) }</span>
+										<span>{ fmt.Sprintf("%d functions", len(pkg.Functions)) }</span>
+										<span>{ fmt.Sprintf("%d constants", len(pkg.Constants)) }</span>
+									</div>
+								</div>
+							}
+						</div>
+					</div>
+				</main>
+			</div>
+		</body>
+	</html>
+}
+
+templ packageDocPage(pkg *PackageDoc) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ pkg.Name } - API Reference - Obtura</title>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<style>
+				.prose pre {
+					background-color: #f3f4f6;
+					padding: 1rem;
+					border-radius: 0.5rem;
+					overflow-x: auto;
+				}
+				.prose code {
+					background-color: #f3f4f6;
+					padding: 0.125rem 0.25rem;
+					border-radius: 0.25rem;
+					font-size: 0.875em;
+				}
+			</style>
+		</head>
+		<body class="bg-gray-50">
+			<div class="min-h-screen flex">
+				<!-- Sidebar with table of contents -->
+				<nav class="w-64 bg-white shadow-lg overflow-y-auto">
+					<div class="p-6">
+						<h1 class="text-2xl font-bold text-gray-900">
+							<a href="/docs">Obtura Docs</a>
+						</h1>
+					</div>
+					<div class="px-6 pb-6">
+						<a href="/docs/api" class="text-sm text-indigo-600 hover:text-indigo-800">← Back to API Reference</a>
+						
+						<h3 class="mt-6 mb-2 font-semibold text-gray-900">{ pkg.Name }</h3>
+						
+						if len(pkg.Types) > 0 {
+							<h4 class="mt-4 mb-1 text-sm font-semibold text-gray-500 uppercase">Types</h4>
+							<ul class="space-y-1">
+								for _, t := range pkg.Types {
+									<li>
+										<a href={ templ.SafeURL("#" + t.Name) } class="block text-sm text-gray-600 hover:text-gray-900">
+											{ t.Name }
+										</a>
+									</li>
+								}
+							</ul>
+						}
+						
+						if len(pkg.Functions) > 0 {
+							<h4 class="mt-4 mb-1 text-sm font-semibold text-gray-500 uppercase">Functions</h4>
+							<ul class="space-y-1">
+								for _, f := range pkg.Functions {
+									<li>
+										<a href={ templ.SafeURL("#" + f.Name) } class="block text-sm text-gray-600 hover:text-gray-900">
+											{ f.Name }
+										</a>
+									</li>
+								}
+							</ul>
+						}
+					</div>
+				</nav>
+
+				<!-- Main content -->
+				<main class="flex-1 p-8 overflow-y-auto">
+					<div class="max-w-4xl">
+						<!-- Package header -->
+						<div class="mb-8">
+							<h2 class="text-3xl font-bold mb-2">Package { pkg.Name }</h2>
+							<p class="text-gray-600 font-mono text-sm mb-4">import "{ pkg.ImportPath }"</p>
+							<div class="prose prose-lg max-w-none">
+								<p>{ pkg.Doc }</p>
+							</div>
+						</div>
+
+						<!-- Types -->
+						if len(pkg.Types) > 0 {
+							<div class="mb-12">
+								<h3 class="text-2xl font-semibold mb-6">Types</h3>
+								<div class="space-y-8">
+									for _, t := range pkg.Types {
+										<div id={ t.Name } class="bg-white p-6 rounded-lg shadow">
+											<h4 class="text-xl font-semibold mb-2 font-mono">type { t.Name }</h4>
+											<div class="prose max-w-none mb-4">
+												<p>{ t.Doc }</p>
+											</div>
+											
+											if len(t.Fields) > 0 {
+												<div class="mt-4">
+													<h5 class="font-semibold mb-2">Fields:</h5>
+													<div class="bg-gray-50 p-4 rounded space-y-2">
+														for _, field := range t.Fields {
+															<div>
+																<span class="font-mono text-sm">{ field.Name }</span>
+																<span class="text-gray-600 text-sm">{ field.Type }</span>
+																if field.Tag != "" {
+																	<span class="text-gray-500 text-xs ml-2">{ field.Tag }</span>
+																}
+																if field.Doc != "" {
+																	<p class="text-sm text-gray-600 ml-4">{ field.Doc }</p>
+																}
+															</div>
+														}
+													</div>
+												</div>
+											}
+											
+											if len(t.Methods) > 0 {
+												<div class="mt-4">
+													<h5 class="font-semibold mb-2">Methods:</h5>
+													<ul class="list-disc list-inside space-y-1">
+														for _, m := range t.Methods {
+															<li>
+																<span class="font-mono text-sm">{ m.Name }</span>
+																<span class="text-gray-600 text-sm">{ m.Signature }</span>
+															</li>
+														}
+													</ul>
+												</div>
+											}
+										</div>
+									}
+								</div>
+							</div>
+						}
+
+						<!-- Functions -->
+						if len(pkg.Functions) > 0 {
+							<div class="mb-12">
+								<h3 class="text-2xl font-semibold mb-6">Functions</h3>
+								<div class="space-y-6">
+									for _, f := range pkg.Functions {
+										<div id={ f.Name } class="bg-white p-6 rounded-lg shadow">
+											<h4 class="text-lg font-mono mb-2">{ f.Signature }</h4>
+											<div class="prose max-w-none">
+												<p>{ f.Doc }</p>
+											</div>
+										</div>
+									}
+								</div>
+							</div>
+						}
+
+						<!-- Constants -->
+						if len(pkg.Constants) > 0 {
+							<div class="mb-12">
+								<h3 class="text-2xl font-semibold mb-6">Constants</h3>
+								<div class="bg-white p-6 rounded-lg shadow">
+									<div class="space-y-2">
+										for _, c := range pkg.Constants {
+											<div>
+												<span class="font-mono text-sm">{ c.Name }</span>
+												if c.Value != "" {
+													<span class="text-gray-600 text-sm"> = { c.Value }</span>
+												}
+												if c.Doc != "" {
+													<p class="text-sm text-gray-600 ml-4">{ c.Doc }</p>
+												}
+											</div>
+										}
+									</div>
+								</div>
+							</div>
+						}
+
+						<!-- Variables -->
+						if len(pkg.Variables) > 0 {
+							<div class="mb-12">
+								<h3 class="text-2xl font-semibold mb-6">Variables</h3>
+								<div class="bg-white p-6 rounded-lg shadow">
+									<div class="space-y-2">
+										for _, v := range pkg.Variables {
+											<div>
+												<span class="font-mono text-sm">{ v.Name }</span>
+												if v.Type != "" {
+													<span class="text-gray-600 text-sm"> { v.Type }</span>
+												}
+												if v.Doc != "" {
+													<p class="text-sm text-gray-600 ml-4">{ v.Doc }</p>
+												}
+											</div>
+										}
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				</main>
+			</div>
+		</body>
+	</html>
+}
+
+templ docsAdminPage(stats map[string]int) {
+	<div class="p-6">
+		<div class="mb-8">
+			<h1 class="text-2xl font-semibold text-gray-900">Documentation Generator</h1>
+			<p class="mt-1 text-sm text-gray-600">
+				Manage auto-generated documentation from code comments
+			</p>
+		</div>
+
+		<!-- Stats -->
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+			<div class="bg-white rounded-lg shadow p-6">
+				<p class="text-sm font-medium text-gray-600">Packages</p>
+				<p class="text-3xl font-semibold text-gray-900 mt-2">{ fmt.Sprintf("%d", stats["packages"]) }</p>
+			</div>
+			<div class="bg-white rounded-lg shadow p-6">
+				<p class="text-sm font-medium text-gray-600">Types</p>
+				<p class="text-3xl font-semibold text-gray-900 mt-2">{ fmt.Sprintf("%d", stats["types"]) }</p>
+			</div>
+			<div class="bg-white rounded-lg shadow p-6">
+				<p class="text-sm font-medium text-gray-600">Functions</p>
+				<p class="text-3xl font-semibold text-gray-900 mt-2">{ fmt.Sprintf("%d", stats["functions"]) }</p>
+			</div>
+		</div>
+
+		<!-- Actions -->
+		<div class="bg-white shadow rounded-lg p-6">
+			<h2 class="text-lg font-medium mb-4">Actions</h2>
+			
+			<div class="space-y-4">
+				<div>
+					<form method="POST" action="/admin/docs/regenerate" class="inline">
+						<button type="submit" 
+								class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+							Regenerate Documentation
+						</button>
+					</form>
+					<p class="mt-2 text-sm text-gray-500">
+						Scan the codebase and regenerate all documentation
+					</p>
+				</div>
+
+				<div>
+					<a href="/docs" target="_blank"
+					   class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+						View Documentation
+					</a>
+					<p class="mt-2 text-sm text-gray-500">
+						Open the documentation site in a new tab
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Info -->
+		<div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+			<h3 class="text-sm font-medium text-blue-800 mb-2">Documentation Tips</h3>
+			<ul class="list-disc list-inside text-sm text-blue-700 space-y-1">
+				<li>Use standard Go doc comments (// or /* */) above declarations</li>
+				<li>Start function comments with the function name</li>
+				<li>Document exported types, functions, and constants</li>
+				<li>Use godoc formatting conventions for better rendering</li>
+			</ul>
+		</div>
+	</div>
+}
+
+// Helper function to truncate documentation
+func truncateDoc(doc string) string {
+	lines := strings.Split(doc, "\n")
+	if len(lines) > 3 {
+		return strings.Join(lines[:3], " ") + "..."
+	}
+	if len(doc) > 200 {
+		return doc[:200] + "..."
+	}
+	return doc
+}

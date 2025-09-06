@@ -1,0 +1,75 @@
+// Package examples demonstrates how to create plugins for Obtura
+package examples
+
+import (
+	"context"
+	"log"
+
+	"github.com/btassone/obtura/pkg/plugin"
+)
+
+// BasicPlugin demonstrates a minimal plugin implementation
+type BasicPlugin struct {
+	plugin.BasePlugin
+}
+
+// NewBasicPlugin creates a new instance of the basic plugin
+func NewBasicPlugin() *BasicPlugin {
+	return &BasicPlugin{
+		BasePlugin: plugin.BasePlugin{
+			PluginID:          "com.example.basic",
+			PluginName:        "Basic Example Plugin",
+			PluginVersion:     "1.0.0",
+			PluginDescription: "A simple example plugin that demonstrates the basic plugin interface",
+			PluginAuthor:      "Example Author",
+		},
+	}
+}
+
+// Initialize is called when the plugin is registered
+func (p *BasicPlugin) Initialize(ctx context.Context) error {
+	log.Printf("[BasicPlugin] Initializing %s v%s", p.Name(), p.Version())
+	
+	// Perform any initialization tasks here
+	// For example: set up database tables, load configuration, etc.
+	
+	return nil
+}
+
+// Start is called when the plugin should begin its work
+func (p *BasicPlugin) Start(ctx context.Context) error {
+	log.Printf("[BasicPlugin] Starting %s", p.Name())
+	
+	// Start any background tasks, workers, etc.
+	
+	return nil
+}
+
+// Stop is called when the plugin should cease operation
+func (p *BasicPlugin) Stop(ctx context.Context) error {
+	log.Printf("[BasicPlugin] Stopping %s", p.Name())
+	
+	// Clean up resources, stop workers, close connections, etc.
+	
+	return nil
+}
+
+// Config returns the plugin's configuration structure
+func (p *BasicPlugin) Config() interface{} {
+	// Return a struct that represents your plugin's configuration
+	// This will be used to generate configuration forms in the admin panel
+	return struct {
+		Enabled bool   `json:"enabled" schema:"title:Enable Plugin,description:Enable or disable this plugin"`
+		APIKey  string `json:"api_key" schema:"title:API Key,description:Your API key for external services"`
+		Debug   bool   `json:"debug" schema:"title:Debug Mode,description:Enable debug logging"`
+	}{
+		Enabled: true,
+		APIKey:  "",
+		Debug:   false,
+	}
+}
+
+// DefaultConfig returns the default configuration values
+func (p *BasicPlugin) DefaultConfig() interface{} {
+	return p.Config()
+}

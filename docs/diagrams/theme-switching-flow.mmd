@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant Admin
+    participant ThemePlugin
+    participant ThemeManager
+    participant Settings
+    participant Cache
+    participant Frontend
+
+    Admin->>ThemePlugin: Select New Theme
+    ThemePlugin->>ThemeManager: Validate Theme
+    ThemeManager->>ThemeManager: Check Constraints
+    
+    alt Theme Valid
+        ThemeManager->>Settings: Update Active Theme
+        Settings->>Cache: Clear Theme Cache
+        Cache->>Frontend: Trigger Reload
+        Frontend->>ThemeManager: Load New Theme
+        ThemeManager->>Frontend: Apply Theme Assets
+    else Theme Invalid
+        ThemeManager->>Admin: Show Constraint Errors
+    end

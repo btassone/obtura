@@ -1,0 +1,183 @@
+package examples
+
+import (
+	"context"
+	"sync"
+	"time"
+
+	"github.com/btassone/obtura/pkg/plugin"
+)
+
+// CacheService provides caching functionality to other plugins
+type CacheService interface {
+	Get(key string) (interface{}, bool)
+	Set(key string, value interface{}, ttl time.Duration)
+	Delete(key string)
+	Clear()
+}
+
+// CacheServicePlugin provides a caching service that other plugins can use
+type CacheServicePlugin struct {
+	plugin.BasePlugin
+	cache map[string]cacheEntry
+	mu    sync.RWMutex
+}
+
+type cacheEntry struct {
+	value      interface{}
+	expiration time.Time
+}
+
+// NewCacheServicePlugin creates a new cache service plugin
+func NewCacheServicePlugin() *CacheServicePlugin {
+	return &CacheServicePlugin{
+		BasePlugin: plugin.BasePlugin{
+			PluginID:          "com.example.cache",
+			PluginName:        "Cache Service",
+			PluginVersion:     "1.0.0",
+			PluginDescription: "Provides in-memory caching service for other plugins",
+			PluginAuthor:      "Example Author",
+		},
+		cache: make(map[string]cacheEntry),
+	}
+}
+
+// Service returns the cache service interface that other plugins can use
+func (p *CacheServicePlugin) Service() interface{} {
+	return CacheService(p)
+}
+
+// Get retrieves a value from the cache
+func (p *CacheServicePlugin) Get(key string) (interface{}, bool) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	
+	entry, exists := p.cache[key]
+	if !exists {
+		return nil, false
+	}
+	
+	// Check if expired
+	if time.Now().After(entry.expiration) {
+		delete(p.cache, key)
+		return nil, false
+	}
+	
+	return entry.value, true
+}
+
+// Set stores a value in the cache with a TTL
+func (p *CacheServicePlugin) Set(key string, value interface{}, ttl time.Duration) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	
+	expiration := time.Now().Add(ttl)
+	if ttl == 0 {
+		// No expiration
+		expiration = time.Now().Add(100 * 365 * 24 * time.Hour) // 100 years
+	}
+	
+	p.cache[key] = cacheEntry{
+		value:      value,
+		expiration: expiration,
+	}
+}
+
+// Delete removes a value from the cache
+func (p *CacheServicePlugin) Delete(key string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	
+	delete(p.cache, key)
+}
+
+// Clear removes all entries from the cache
+func (p *CacheServicePlugin) Clear() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	
+	p.cache = make(map[string]cacheEntry)
+}
+
+// Initialize sets up the cache service
+func (p *CacheServicePlugin) Initialize(ctx context.Context) error {
+	// Start a goroutine to periodically clean up expired entries
+	go p.cleanupExpired(ctx)
+	return nil
+}
+
+// cleanupExpired periodically removes expired cache entries
+func (p *CacheServicePlugin) cleanupExpired(ctx context.Context) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			p.mu.Lock()
+			now := time.Now()
+			for key, entry := range p.cache {
+				if now.After(entry.expiration) {
+					delete(p.cache, key)
+				}
+			}
+			p.mu.Unlock()
+		}
+	}
+}
+
+// Start begins the cache service
+func (p *CacheServicePlugin) Start(ctx context.Context) error {
+	return nil
+}
+
+// Stop halts the cache service
+func (p *CacheServicePlugin) Stop(ctx context.Context) error {
+	p.Clear()
+	return nil
+}
+
+// Config returns the cache configuration
+func (p *CacheServicePlugin) Config() interface{} {
+	return struct {
+		MaxEntries      int    `json:"max_entries" schema:"title:Maximum Entries,description:Maximum number of cache entries (0 for unlimited)"`
+		DefaultTTL      int    `json:"default_ttl" schema:"title:Default TTL (seconds),description:Default time-to-live for cache entries"`
+		CleanupInterval int    `json:"cleanup_interval" schema:"title:Cleanup Interval (minutes),description:How often to clean up expired entries"`
+	}{
+		MaxEntries:      0,
+		DefaultTTL:      3600,
+		CleanupInterval: 5,
+	}
+}
+
+// DefaultConfig returns default configuration
+func (p *CacheServicePlugin) DefaultConfig() interface{} {
+	return p.Config()
+}
+
+// Example of how another plugin would use the cache service:
+/*
+func (otherPlugin *SomePlugin) useCache(registry *plugin.Registry) {
+	// Get the cache service from the registry
+	service, ok := registry.GetService("com.example.cache")
+	if !ok {
+		log.Println("Cache service not available")
+		return
+	}
+	
+	cache, ok := service.(CacheService)
+	if !ok {
+		log.Println("Invalid cache service type")
+		return
+	}
+	
+	// Use the cache
+	cache.Set("user:123", userData, 10*time.Minute)
+	
+	if data, found := cache.Get("user:123"); found {
+		// Use cached data
+	}
+}
+*/

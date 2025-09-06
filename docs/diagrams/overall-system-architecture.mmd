@@ -1,0 +1,106 @@
+graph TB
+    subgraph "Frontend Layer"
+        Browser[Client Browser]
+        HTMX[HTMX]
+        Alpine[Alpine.js]
+        PWA[PWA Features]
+        
+        Browser --> HTMX
+        Browser --> Alpine
+        Browser --> PWA
+    end
+
+    subgraph "CLI Tool"
+        CLI[obtura CLI]
+        CLI --> Generate[Generate Commands]
+        CLI --> Serve[Dev Server]
+        CLI --> Build[Build Commands]
+    end
+
+    subgraph "Core Framework"
+        Core[Core System]
+        PM[Plugin Manager]
+        Router[Router]
+        Layout[Layout System]
+        Page[Page Registry]
+        
+        Core --> PM
+        Core --> Router
+        Core --> Layout
+        Core --> Page
+    end
+
+    subgraph "Web Layer"
+        Server[HTTP Server]
+        MW[Middleware Stack]
+        Templates[Templ Components]
+        Static[Static Assets]
+        
+        Server --> MW
+        MW --> Templates
+        Templates --> Static
+    end
+    
+    subgraph "Middleware Layer"
+        MWRegistry[Middleware Registry]
+        GlobalMW[Global MW]
+        PluginMW[Plugin MW]
+        RouteMW[Route MW]
+        
+        MWRegistry --> GlobalMW
+        MWRegistry --> PluginMW
+        MWRegistry --> RouteMW
+    end
+
+    subgraph "Database Layer"
+        DB[Database Core]
+        ORM[ORM/Models]
+        Migrations[Migrations]
+        Seeders[Seeders]
+        
+        DB --> ORM
+        DB --> Migrations
+        DB --> Seeders
+    end
+
+    subgraph "Plugin System"
+        PI[Plugin Interface]
+        CorePlugins[Core Plugins]
+        UserPlugins[User Plugins]
+        DBPlugin[Database Plugin]
+        
+        PI --> CorePlugins
+        PI --> UserPlugins
+        PI --> DBPlugin
+    end
+
+    subgraph "Admin Interface"
+        Admin[Admin Dashboard]
+        Settings[Settings Manager]
+        PluginUI[Plugin UIs]
+        
+        Admin --> Settings
+        Admin --> PluginUI
+    end
+
+    Browser --> Server
+    HTMX --> Server
+    Alpine --> HTMX
+    CLI --> Core
+    Core --> Server
+    Core --> MWRegistry
+    Core --> DB
+    PM --> PI
+    Router --> MW
+    Layout --> Templates
+    CorePlugins --> Admin
+    CorePlugins --> PluginMW
+    UserPlugins --> Admin
+    UserPlugins --> PluginMW
+    DBPlugin --> DB
+    DBPlugin --> ORM
+    MW --> Router
+    Templates --> Browser
+    Static --> Browser
+    ORM --> CorePlugins
+    ORM --> UserPlugins

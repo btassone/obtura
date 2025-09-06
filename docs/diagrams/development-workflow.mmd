@@ -1,0 +1,30 @@
+graph TD
+    subgraph "Development Mode"
+        Edit[Edit Code]
+        Air[Air Detects Change]
+        Rebuild[Rebuild Binary]
+        Templ[Generate Templ]
+        Reload[Hot Reload]
+        
+        Edit --> Air
+        Air --> Rebuild
+        Air --> Templ
+        Rebuild --> Reload
+        Templ --> Reload
+    end
+
+    subgraph "CLI Generation"
+        CLICmd[obtura generate]
+        CLICmd --> GenPage[Generate Page]
+        CLICmd --> GenPlugin[Generate Plugin]
+        CLICmd --> GenLayout[Generate Layout]
+        CLICmd --> GenComp[Generate Component]
+    end
+
+    subgraph "Build Process"
+        BuildCmd[obtura build]
+        BuildCmd --> CompileGo[Compile Go]
+        BuildCmd --> CompileTempl[Compile Templ]
+        BuildCmd --> BuildCSS[Build Tailwind]
+        BuildCmd --> Bundle[Bundle Assets]
+    end

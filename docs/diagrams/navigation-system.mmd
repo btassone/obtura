@@ -1,0 +1,20 @@
+graph LR
+    subgraph "Navigation Registry"
+        NavReg[Navigation Registry]
+        NavReg --> MenuItems[Menu Items]
+        NavReg --> Groups[Menu Groups]
+        NavReg --> Order[Sort Order]
+    end
+
+    subgraph "Auto Registration"
+        Plugin[Plugin]
+        Plugin --> RegisterNav[Register Nav Items]
+        RegisterNav --> NavReg
+    end
+
+    subgraph "Rendering"
+        NavComp[Nav Component]
+        NavComp --> GetItems[Get Menu Items]
+        GetItems --> NavReg
+        NavComp --> RenderMenu[Render Menu]
+    end

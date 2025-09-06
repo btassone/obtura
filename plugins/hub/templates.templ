@@ -1,0 +1,652 @@
+package hub
+
+import (
+	"fmt"
+	"github.com/btassone/obtura/pkg/plugin"
+)
+
+// hubPage displays the main plugin hub
+templ hubPage(plugins []PluginInfo) {
+	@baseLayout("Plugin Hub") {
+		<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+			<div class="mb-8">
+				<h1 class="text-3xl font-bold text-gray-900">Plugin Hub</h1>
+				<p class="mt-2 text-gray-600">Discover and explore all available plugins and their features</p>
+			</div>
+			
+			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+				for _, plugin := range plugins {
+					@pluginCard(plugin)
+				}
+			</div>
+		</div>
+	}
+}
+
+// pluginCard displays a plugin summary card
+templ pluginCard(plugin PluginInfo) {
+	<div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+		<div class="p-6">
+			<div class="flex items-start justify-between">
+				<div class="flex-1">
+					<h3 class="text-lg font-semibold text-gray-900">{ plugin.Name }</h3>
+					<p class="text-sm text-gray-500">v{ plugin.Version } by { plugin.Author }</p>
+				</div>
+				if plugin.IsActive {
+					<span class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">Active</span>
+				} else {
+					<span class="px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">Inactive</span>
+				}
+			</div>
+			
+			<p class="mt-3 text-sm text-gray-600">{ plugin.Description }</p>
+			
+			<div class="mt-4 flex flex-wrap gap-2">
+				@pluginFeatureBadges(plugin)
+			</div>
+			
+			<div class="mt-4 flex justify-between items-center">
+				<a href={ templ.SafeURL(fmt.Sprintf("/hub/plugins/%s", plugin.ID)) } 
+				   class="text-sm text-indigo-600 hover:text-indigo-500">
+					View Details →
+				</a>
+				if len(plugin.Dependencies) > 0 {
+					<span class="text-xs text-gray-500">
+						{ fmt.Sprintf("%d dependencies", len(plugin.Dependencies)) }
+					</span>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+// pluginFeatureBadges displays feature badges for a plugin
+templ pluginFeatureBadges(plugin PluginInfo) {
+	if plugin.ProvidesPages {
+		<span class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded">
+			<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+			</svg>
+			Pages
+		</span>
+	}
+	if plugin.ProvidesAdmin {
+		<span class="inline-flex items-center px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded">
+			<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+			</svg>
+			Admin
+		</span>
+	}
+	if plugin.ProvidesSettings {
+		<span class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded">
+			<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+			</svg>
+			Settings
+		</span>
+	}
+	if plugin.ProvidesHooks {
+		<span class="inline-flex items-center px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded">
+			<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+			</svg>
+			Hooks
+		</span>
+	}
+}
+
+// pluginDetailPage displays detailed information about a plugin
+templ pluginDetailPage(plugin *PluginInfo) {
+	@baseLayout(plugin.Name) {
+		<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+			<!-- Plugin Header -->
+			<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+				<div class="flex items-start justify-between">
+					<div>
+						<h1 class="text-3xl font-bold text-gray-900">{ plugin.Name }</h1>
+						<p class="text-gray-500 mt-1">v{ plugin.Version } by { plugin.Author }</p>
+					</div>
+					if plugin.IsActive {
+						<span class="px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">Active</span>
+					} else {
+						<span class="px-3 py-1 text-sm font-medium text-gray-800 bg-gray-100 rounded-full">Inactive</span>
+					}
+				</div>
+				<p class="mt-4 text-gray-700">{ plugin.Description }</p>
+			</div>
+			
+			<!-- Plugin Features -->
+			<div class="grid gap-6 lg:grid-cols-3">
+				<!-- Pages -->
+				if plugin.ProvidesPages && len(plugin.Pages) > 0 {
+					<div class="bg-white rounded-lg shadow-md p-6">
+						<h2 class="text-lg font-semibold text-gray-900 mb-4">Pages</h2>
+						<ul class="space-y-2">
+							for _, page := range plugin.Pages {
+								<li>
+									<a href={ templ.SafeURL(page.Path) } class="text-indigo-600 hover:text-indigo-500">
+										{ page.Title }
+									</a>
+									<p class="text-sm text-gray-600">{ page.Description }</p>
+								</li>
+							}
+						</ul>
+					</div>
+				}
+				
+				<!-- Routes -->
+				if plugin.ProvidesRoutes && len(plugin.Routes) > 0 {
+					<div class="bg-white rounded-lg shadow-md p-6">
+						<h2 class="text-lg font-semibold text-gray-900 mb-4">API Routes</h2>
+						<ul class="space-y-2 text-sm">
+							for _, route := range plugin.Routes {
+								<li class="font-mono">
+									<span class="text-green-600">{ route.Method }</span>
+									<span class="text-gray-700">{ route.Path }</span>
+								</li>
+							}
+						</ul>
+					</div>
+				}
+				
+				<!-- Documentation -->
+				if plugin.Documentation != nil {
+					<div class="bg-white rounded-lg shadow-md p-6">
+						<h2 class="text-lg font-semibold text-gray-900 mb-4">Documentation</h2>
+						<div class="space-y-3">
+							if plugin.Documentation.Overview != "" {
+								<div>
+									<h3 class="font-medium text-gray-700">Overview</h3>
+									<p class="text-sm text-gray-600 mt-1">{ plugin.Documentation.Overview }</p>
+								</div>
+							}
+							<a href={ templ.SafeURL(fmt.Sprintf("/hub/plugins/%s/docs", plugin.ID)) } 
+							   class="inline-block text-sm text-indigo-600 hover:text-indigo-500">
+								View Full Documentation →
+							</a>
+						</div>
+					</div>
+				}
+			</div>
+			
+			<!-- Dependencies -->
+			if len(plugin.Dependencies) > 0 || len(plugin.DependedBy) > 0 {
+				<div class="mt-6 bg-white rounded-lg shadow-md p-6">
+					<h2 class="text-lg font-semibold text-gray-900 mb-4">Dependencies</h2>
+					<div class="grid gap-4 md:grid-cols-2">
+						if len(plugin.Dependencies) > 0 {
+							<div>
+								<h3 class="font-medium text-gray-700 mb-2">Requires</h3>
+								<ul class="space-y-1">
+									for _, dep := range plugin.Dependencies {
+										<li class="text-sm text-gray-600">• { dep }</li>
+									}
+								</ul>
+							</div>
+						}
+						if len(plugin.DependedBy) > 0 {
+							<div>
+								<h3 class="font-medium text-gray-700 mb-2">Required By</h3>
+								<ul class="space-y-1">
+									for _, dep := range plugin.DependedBy {
+										<li class="text-sm text-gray-600">• { dep }</li>
+									}
+								</ul>
+							</div>
+						}
+					</div>
+				</div>
+			}
+		</div>
+	}
+}
+
+// adminHubPage displays the admin plugin hub
+templ adminHubPage(plugins []PluginInfo) {
+	@adminBaseLayout("Plugin Hub") {
+		<div class="p-6">
+			<div class="mb-6">
+				<h1 class="text-2xl font-bold text-gray-900">Plugin Hub</h1>
+				<p class="mt-1 text-sm text-gray-600">Manage all plugins and their configurations</p>
+			</div>
+			
+			<div class="bg-white rounded-lg shadow">
+				<table class="min-w-full divide-y divide-gray-200">
+					<thead class="bg-gray-50">
+						<tr>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plugin</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Features</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+						</tr>
+					</thead>
+					<tbody class="bg-white divide-y divide-gray-200">
+						for _, plugin := range plugins {
+							<tr class="hover:bg-gray-50">
+								<td class="px-6 py-4">
+									<div>
+										<div class="text-sm font-medium text-gray-900">{ plugin.Name }</div>
+										<div class="text-sm text-gray-500">{ plugin.ID }</div>
+									</div>
+								</td>
+								<td class="px-6 py-4 text-sm text-gray-900">{ plugin.Version }</td>
+								<td class="px-6 py-4">
+									if plugin.IsActive {
+										<span class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">Active</span>
+									} else {
+										<span class="px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">Inactive</span>
+									}
+								</td>
+								<td class="px-6 py-4">
+									<div class="flex flex-wrap gap-1">
+										@pluginFeatureBadges(plugin)
+									</div>
+								</td>
+								<td class="px-6 py-4 text-sm">
+									<div class="flex space-x-2">
+										<a href={ templ.SafeURL(fmt.Sprintf("/admin/hub/plugins/%s", plugin.ID)) } 
+										   class="text-indigo-600 hover:text-indigo-900">Details</a>
+										if plugin.ProvidesSettings {
+											<a href={ templ.SafeURL(fmt.Sprintf("/admin/hub/plugins/%s/settings", plugin.ID)) } 
+											   class="text-indigo-600 hover:text-indigo-900">Settings</a>
+										}
+										if plugin.Documentation != nil {
+											<a href={ templ.SafeURL(fmt.Sprintf("/admin/hub/plugins/%s/docs", plugin.ID)) } 
+											   class="text-indigo-600 hover:text-indigo-900">Docs</a>
+										}
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	}
+}
+
+// adminPluginDetailPage displays admin view of plugin details
+templ adminPluginDetailPage(plugin *PluginInfo) {
+	@adminBaseLayout(plugin.Name) {
+		<div class="p-6">
+			<!-- Back link -->
+			<a href="/admin/hub" class="text-sm text-indigo-600 hover:text-indigo-500 mb-4 inline-block">
+				← Back to Plugin Hub
+			</a>
+			
+			<!-- Plugin info -->
+			<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+				<h1 class="text-2xl font-bold text-gray-900">{ plugin.Name }</h1>
+				<p class="text-gray-600 mt-1">{ plugin.Description }</p>
+				
+				<dl class="mt-4 grid grid-cols-2 gap-4 text-sm">
+					<div>
+						<dt class="font-medium text-gray-500">Plugin ID</dt>
+						<dd class="mt-1 text-gray-900">{ plugin.ID }</dd>
+					</div>
+					<div>
+						<dt class="font-medium text-gray-500">Version</dt>
+						<dd class="mt-1 text-gray-900">{ plugin.Version }</dd>
+					</div>
+					<div>
+						<dt class="font-medium text-gray-500">Author</dt>
+						<dd class="mt-1 text-gray-900">{ plugin.Author }</dd>
+					</div>
+					<div>
+						<dt class="font-medium text-gray-500">Status</dt>
+						<dd class="mt-1">
+							if plugin.IsActive {
+								<span class="text-green-600">Active</span>
+							} else {
+								<span class="text-gray-600">Inactive</span>
+							}
+						</dd>
+					</div>
+				</dl>
+			</div>
+			
+			<!-- Feature tabs -->
+			<div class="bg-white rounded-lg shadow">
+				<div class="border-b border-gray-200">
+					<nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+						<a href="#" class="border-b-2 border-indigo-500 py-4 px-1 text-sm font-medium text-indigo-600">
+							Overview
+						</a>
+						if plugin.ProvidesSettings {
+							<a href={ templ.SafeURL(fmt.Sprintf("/admin/hub/plugins/%s/settings", plugin.ID)) } 
+							   class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+								Settings
+							</a>
+						}
+						if plugin.Documentation != nil {
+							<a href={ templ.SafeURL(fmt.Sprintf("/admin/hub/plugins/%s/docs", plugin.ID)) } 
+							   class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+								Documentation
+							</a>
+						}
+					</nav>
+				</div>
+				
+				<div class="p-6">
+					<div class="grid gap-6 lg:grid-cols-2">
+						<!-- Pages -->
+						if plugin.ProvidesPages && len(plugin.Pages) > 0 {
+							<div>
+								<h3 class="text-lg font-medium text-gray-900 mb-3">Pages</h3>
+								<ul class="space-y-2">
+									for _, page := range plugin.Pages {
+										<li class="bg-gray-50 rounded p-3">
+											<div class="flex justify-between items-start">
+												<div>
+													<h4 class="font-medium text-gray-900">{ page.Title }</h4>
+													<p class="text-sm text-gray-600 mt-1">{ page.Description }</p>
+													<p class="text-xs text-gray-500 mt-1">Path: { page.Path }</p>
+												</div>
+												<a href={ templ.SafeURL(page.Path) } target="_blank" 
+												   class="text-indigo-600 hover:text-indigo-500 text-sm">
+													View →
+												</a>
+											</div>
+										</li>
+									}
+								</ul>
+							</div>
+						}
+						
+						<!-- Routes -->
+						if (plugin.ProvidesRoutes && len(plugin.Routes) > 0) || (plugin.ProvidesAdmin && len(plugin.AdminRoutes) > 0) {
+							<div>
+								<h3 class="text-lg font-medium text-gray-900 mb-3">Routes</h3>
+								if len(plugin.Routes) > 0 {
+									<h4 class="text-sm font-medium text-gray-700 mb-2">Frontend Routes</h4>
+									<ul class="space-y-1 mb-4">
+										for _, route := range plugin.Routes {
+											<li class="text-sm font-mono bg-gray-50 rounded px-2 py-1">
+												<span class="text-green-600">{ route.Method }</span>
+												<span class="text-gray-700">{ route.Path }</span>
+											</li>
+										}
+									</ul>
+								}
+								if len(plugin.AdminRoutes) > 0 {
+									<h4 class="text-sm font-medium text-gray-700 mb-2">Admin Routes</h4>
+									<ul class="space-y-1">
+										for _, route := range plugin.AdminRoutes {
+											<li class="text-sm font-mono bg-gray-50 rounded px-2 py-1">
+												<span class="text-green-600">{ route.Method }</span>
+												<span class="text-gray-700">/admin{ route.Path }</span>
+											</li>
+										}
+									</ul>
+								}
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// pluginDocsPage displays plugin documentation
+templ pluginDocsPage(plugin *PluginInfo) {
+	@adminBaseLayout(fmt.Sprintf("%s - Documentation", plugin.Name)) {
+		<div class="p-6">
+			<!-- Back link -->
+			<a href={ templ.SafeURL(fmt.Sprintf("/admin/hub/plugins/%s", plugin.ID)) } 
+			   class="text-sm text-indigo-600 hover:text-indigo-500 mb-4 inline-block">
+				← Back to Plugin Details
+			</a>
+			
+			if plugin.Documentation != nil {
+				<div class="bg-white rounded-lg shadow p-6">
+					<h1 class="text-2xl font-bold text-gray-900 mb-6">{ plugin.Name } Documentation</h1>
+					
+					<!-- Overview -->
+					if plugin.Documentation.Overview != "" {
+						<section class="mb-8">
+							<h2 class="text-xl font-semibold text-gray-900 mb-3">Overview</h2>
+							<p class="text-gray-700">{ plugin.Documentation.Overview }</p>
+						</section>
+					}
+					
+					<!-- Installation -->
+					if plugin.Documentation.Installation != "" {
+						<section class="mb-8">
+							<h2 class="text-xl font-semibold text-gray-900 mb-3">Installation</h2>
+							<div class="prose max-w-none">
+								<pre class="bg-gray-50 p-4 rounded">{ plugin.Documentation.Installation }</pre>
+							</div>
+						</section>
+					}
+					
+					<!-- Configuration -->
+					if plugin.Documentation.Configuration != "" {
+						<section class="mb-8">
+							<h2 class="text-xl font-semibold text-gray-900 mb-3">Configuration</h2>
+							<div class="prose max-w-none">
+								<pre class="bg-gray-50 p-4 rounded">{ plugin.Documentation.Configuration }</pre>
+							</div>
+						</section>
+					}
+					
+					<!-- Usage -->
+					if plugin.Documentation.Usage != "" {
+						<section class="mb-8">
+							<h2 class="text-xl font-semibold text-gray-900 mb-3">Usage</h2>
+							<div class="prose max-w-none">
+								<pre class="bg-gray-50 p-4 rounded">{ plugin.Documentation.Usage }</pre>
+							</div>
+						</section>
+					}
+					
+					<!-- API Endpoints -->
+					if len(plugin.Documentation.API) > 0 {
+						<section class="mb-8">
+							<h2 class="text-xl font-semibold text-gray-900 mb-3">API Endpoints</h2>
+							<div class="space-y-4">
+								for _, endpoint := range plugin.Documentation.API {
+									<div class="border rounded-lg p-4">
+										<div class="flex items-center mb-2">
+											<span class="text-sm font-mono font-medium text-green-600">{ endpoint.Method }</span>
+											<span class="text-sm font-mono ml-2">{ endpoint.Path }</span>
+										</div>
+										<p class="text-sm text-gray-700 mb-2">{ endpoint.Description }</p>
+										if endpoint.Example != "" {
+											<pre class="bg-gray-50 p-2 rounded text-xs">{ endpoint.Example }</pre>
+										}
+									</div>
+								}
+							</div>
+						</section>
+					}
+					
+					<!-- FAQ -->
+					if len(plugin.Documentation.FAQ) > 0 {
+						<section class="mb-8">
+							<h2 class="text-xl font-semibold text-gray-900 mb-3">Frequently Asked Questions</h2>
+							<div class="space-y-4">
+								for _, faq := range plugin.Documentation.FAQ {
+									<div>
+										<h3 class="font-medium text-gray-900">{ faq.Question }</h3>
+										<p class="text-gray-700 mt-1">{ faq.Answer }</p>
+									</div>
+								}
+							</div>
+						</section>
+					}
+				</div>
+			} else {
+				<div class="bg-white rounded-lg shadow p-6">
+					<p class="text-gray-600">No documentation available for this plugin.</p>
+				</div>
+			}
+		</div>
+	}
+}
+
+// pluginSettingsPage displays plugin settings
+templ pluginSettingsPage(plugin *PluginInfo, currentValues map[string]interface{}) {
+	@adminBaseLayout(fmt.Sprintf("%s - Settings", plugin.Name)) {
+		<div class="p-6">
+			<!-- Back link -->
+			<a href={ templ.SafeURL(fmt.Sprintf("/admin/hub/plugins/%s", plugin.ID)) } 
+			   class="text-sm text-indigo-600 hover:text-indigo-500 mb-4 inline-block">
+				← Back to Plugin Details
+			</a>
+			
+			<div class="bg-white rounded-lg shadow">
+				<div class="p-6">
+					<h1 class="text-2xl font-bold text-gray-900 mb-6">{ plugin.Name } Settings</h1>
+					
+					if len(plugin.Settings) > 0 {
+						<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/admin/hub/plugins/%s/settings", plugin.ID)) }>
+							<div class="space-y-6">
+								for _, setting := range plugin.Settings {
+									@settingField(setting, currentValues[setting.Key])
+								}
+							</div>
+							
+							<div class="mt-6 flex justify-end">
+								<button type="submit" 
+								        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+									Save Settings
+								</button>
+							</div>
+						</form>
+					} else {
+						<p class="text-gray-600">No configurable settings for this plugin.</p>
+					}
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// settingField renders a setting field based on its type
+templ settingField(setting plugin.Setting, currentValue interface{}) {
+	<div>
+		<label for={ setting.Key } class="block text-sm font-medium text-gray-700">
+			{ setting.Name }
+		</label>
+		if setting.Description != "" {
+			<p class="mt-1 text-sm text-gray-500">{ setting.Description }</p>
+		}
+		<div class="mt-2">
+			switch setting.Type {
+			case plugin.SettingTypeString:
+				<input type="text" 
+				       id={ setting.Key } 
+				       name={ setting.Key } 
+				       value={ fmt.Sprintf("%v", currentValue) }
+				       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+			case plugin.SettingTypeInt:
+				<input type="number" 
+				       id={ setting.Key } 
+				       name={ setting.Key } 
+				       value={ fmt.Sprintf("%v", currentValue) }
+				       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+			case plugin.SettingTypeBool:
+				<input type="checkbox" 
+				       id={ setting.Key } 
+				       name={ setting.Key } 
+				       if currentValue == true { checked }
+				       class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"/>
+			case plugin.SettingTypeSelect:
+				<select id={ setting.Key } 
+				        name={ setting.Key }
+				        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+					for _, option := range setting.Options {
+						<option value={ option.Value } 
+						        if fmt.Sprintf("%v", currentValue) == option.Value { selected }>
+							{ option.Label }
+						</option>
+					}
+				</select>
+			case plugin.SettingTypeColor:
+				<input type="color" 
+				       id={ setting.Key } 
+				       name={ setting.Key } 
+				       value={ fmt.Sprintf("%v", currentValue) }
+				       class="h-10 w-20"/>
+			default:
+				<input type="text" 
+				       id={ setting.Key } 
+				       name={ setting.Key } 
+				       value={ fmt.Sprintf("%v", currentValue) }
+				       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+			}
+		</div>
+	</div>
+}
+
+// baseLayout provides the base layout for public pages
+templ baseLayout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } - Obtura</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+		</head>
+		<body class="bg-gray-50">
+			<nav class="bg-white shadow">
+				<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+					<div class="flex h-16 justify-between">
+						<div class="flex">
+							<div class="flex flex-shrink-0 items-center">
+								<h1 class="text-xl font-semibold">Obtura</h1>
+							</div>
+							<div class="ml-10 flex items-baseline space-x-4">
+								<a href="/" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+								<a href="/hub" class="text-gray-900 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">Plugin Hub</a>
+								<a href="/docs" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">Docs</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</nav>
+			{ children... }
+		</body>
+	</html>
+}
+
+// adminBaseLayout provides the base layout for admin pages
+templ adminBaseLayout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } - Obtura Admin</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+		</head>
+		<body class="bg-gray-100">
+			<div class="flex h-screen">
+				<!-- Sidebar -->
+				<div class="w-64 bg-gray-800">
+					<div class="p-4">
+						<h2 class="text-white text-lg font-semibold">Obtura Admin</h2>
+					</div>
+					<nav class="mt-4">
+						<a href="/admin" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Dashboard</a>
+						<a href="/admin/hub" class="block px-4 py-2 text-white bg-gray-900">Plugin Hub</a>
+						<a href="/admin/pages" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Pages</a>
+						<a href="/admin/settings" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Settings</a>
+					</nav>
+				</div>
+				
+				<!-- Main content -->
+				<div class="flex-1 overflow-y-auto">
+					{ children... }
+				</div>
+			</div>
+		</body>
+	</html>
+}

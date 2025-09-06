@@ -1,0 +1,48 @@
+graph TB
+    subgraph "Theme Plugin Core"
+        ThemePlugin[Themes Plugin]
+        ThemeManager[Theme Manager]
+        ActiveTheme[Active Theme]
+        
+        ThemePlugin --> ThemeManager
+        ThemeManager --> ActiveTheme
+    end
+
+    subgraph "Theme Components"
+        Theme[Theme]
+        Theme --> Layouts[Layouts Map]
+        Theme --> Assets[Assets]
+        Theme --> Settings[Theme Settings]
+        Theme --> Constraints[Constraints]
+        
+        Layouts --> DefaultLayout[Default Layout]
+        Layouts --> CustomLayouts[Custom Layouts]
+        
+        Assets --> Styles[CSS Files]
+        Assets --> Scripts[JS Files]
+        
+        Settings --> Colors[Color Settings]
+        Settings --> Typography[Typography]
+        Settings --> Spacing[Spacing]
+    end
+
+    subgraph "Constraint System"
+        Constraints --> RequiredSlots[Required Slots]
+        Constraints --> OptionalSlots[Optional Slots]
+        Constraints --> ColorSchemes[Color Schemes]
+        Constraints --> Components[Required Components]
+    end
+
+    subgraph "Theme Application"
+        PageRender[Page Render]
+        PageRender --> GetTheme[Get Active Theme]
+        GetTheme --> ThemeManager
+        PageRender --> SelectLayout[Select Layout]
+        SelectLayout --> Layouts
+        PageRender --> LoadAssets[Load Theme Assets]
+        LoadAssets --> Assets
+        PageRender --> ApplyConstraints[Apply Constraints]
+        ApplyConstraints --> Constraints
+    end
+
+    ThemeManager --> Theme

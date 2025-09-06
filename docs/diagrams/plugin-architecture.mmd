@@ -1,0 +1,46 @@
+graph LR
+    subgraph "Plugin Interface"
+        Interface[IPlugin]
+        Register[Register]
+        Routes[Routes]
+        Admin[AdminUI]
+        Assets[Assets]
+        Middleware[Middleware]
+        
+        Interface --> Register
+        Interface --> Routes
+        Interface --> Admin
+        Interface --> Assets
+        Interface --> Middleware
+    end
+
+    subgraph "Core Plugins"
+        Database[Database Plugin]
+        Pages[Pages Plugin]
+        Settings[Settings Plugin]
+        Users[Users Plugin]
+        Media[Media Plugin]
+    end
+
+    subgraph "Plugin Lifecycle"
+        Load[Load Plugin]
+        Init[Initialize]
+        RegMW[Register Middleware]
+        RegRoutes[Register Routes]
+        RegAdmin[Register Admin]
+        
+        Load --> Init
+        Init --> RegMW
+        RegMW --> RegRoutes
+        RegRoutes --> RegAdmin
+    end
+
+    Interface --> Database
+    Interface --> Pages
+    Interface --> Settings
+    Interface --> Users
+    Interface --> Media
+    
+    Database --> Pages
+    Database --> Users
+    Database --> Media

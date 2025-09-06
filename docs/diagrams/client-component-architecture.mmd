@@ -1,0 +1,51 @@
+graph LR
+    subgraph "Templ Components"
+        BaseLayout[Base Layout]
+        PageComp[Page Components]
+        SharedComp[Shared Components]
+        
+        BaseLayout --> PageComp
+        PageComp --> SharedComp
+    end
+
+    subgraph "HTMX Features"
+        Boost[hx-boost]
+        Swap[hx-swap]
+        Trigger[hx-trigger]
+        Target[hx-target]
+        SSE[hx-sse]
+        WS[hx-ws]
+        
+        PageComp --> Boost
+        PageComp --> Swap
+        Forms --> Trigger
+        Forms --> Target
+        RealTime --> SSE
+        Chat --> WS
+    end
+
+    subgraph "Alpine.js Features"
+        Data[x-data]
+        Show[x-show or x-if]
+        Model[x-model]
+        Store[Alpine.store]
+        Magic[refs and el]
+        
+        Forms --> Data
+        Modals --> Show
+        Forms --> Model
+        GlobalState --> Store
+        Interactive --> Magic
+    end
+
+    subgraph "Progressive Enhancement"
+        NoJS[No-JS Fallback]
+        Loading[Loading States]
+        Error[Error Handling]
+        Offline[Offline Mode]
+        
+        HTMX --> Loading
+        HTMX --> Error
+        Alpine --> Offline
+        BaseLayout --> NoJS
+    end

@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-obtura
+/obtura
 obtura-*
 
 # Test binary, built with `go test -c`

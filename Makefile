@@ -47,10 +47,30 @@ run: build ## Build and run the application
 test: ## Run tests
 	$(GOTEST) -v -race -cover ./...
 
+test-short: ## Run short tests only
+	$(GOTEST) -v -short ./...
+
+test-verbose: ## Run tests with verbose output
+	$(GOTEST) -v -race -coverprofile=coverage.out ./...
+
+test-unit: ## Run unit tests only
+	$(GOTEST) -v -race -short -tags=unit ./...
+
+test-integration: ## Run integration tests
+	$(GOTEST) -v -race -tags=integration ./test/integration/...
+
+test-bench: ## Run benchmarks
+	$(GOTEST) -bench=. -benchmem ./...
+
+test-specific: ## Run specific test (use: make test-specific name=TestFunctionName)
+	@test -n "$(name)" || (echo "Error: name is required" && exit 1)
+	$(GOTEST) -v -race -run $(name) ./...
+
 clean: ## Clean build artifacts
 	@rm -rf tmp/
 	@rm -f $(BINARY_NAME) $(BINARY_NAME)-*
-	@rm -f coverage.out coverage.html
+	@rm -rf coverage/
+	@rm -f coverage.out coverage.html report.xml
 	@find . -name "*_templ.go" -type f -delete
 	@echo "Clean complete"
 
@@ -66,9 +86,19 @@ lint: ## Run linters (fmt, vet, golangci-lint)
 	fi
 
 test-coverage: ## Generate test coverage report
-	$(GOTEST) -v -race -coverprofile=coverage.out ./...
-	$(GOCMD) tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report: coverage.html"
+	@./scripts/test-coverage.sh
+
+test-ci: ## Run tests in CI mode
+	@mkdir -p coverage
+	$(GOTEST) -v -race -coverprofile=coverage/coverage.out -covermode=atomic ./...
+	$(GOCMD) tool cover -func=coverage/coverage.out
+
+test-watch: ## Run tests in watch mode
+	@if command -v gotestsum >/dev/null; then \
+		gotestsum --watch -- -race ./...; \
+	else \
+		echo "gotestsum not installed. Install with: go install gotest.tools/gotestsum@latest"; \
+	fi
 
 # === Database ===
 
@@ -142,8 +172,9 @@ tools: ## Check required development tools
 	@command -v golangci-lint >/dev/null && echo "✓ golangci-lint" || echo "✗ golangci-lint (optional)"
 	@command -v docker >/dev/null && echo "✓ Docker" || echo "✗ Docker (optional)"
 
-.PHONY: help setup dev build run test clean lint test-coverage \
-        db-migrate db-rollback db-seed db-setup \
+.PHONY: help setup dev build run test test-short test-verbose test-unit \
+        test-integration test-bench test-specific clean lint test-coverage \
+        test-ci test-watch db-migrate db-rollback db-seed db-setup \
         new-migration new-model new-controller new-plugin \
         build-prod build-all docker-up docker-down docker-logs \
         deps tools

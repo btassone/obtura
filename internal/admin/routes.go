@@ -7,7 +7,7 @@ import (
 	"github.com/btassone/obtura/internal/models"
 	"github.com/btassone/obtura/pkg/plugin"
 	authPlugin "github.com/btassone/obtura/plugins/auth"
-	"github.com/btassone/obtura/web/templates/admin/pages"
+	adminpages "github.com/btassone/obtura/web/templates/admin/pages"
 	"github.com/go-chi/chi/v5"
 )
 

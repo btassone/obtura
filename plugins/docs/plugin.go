@@ -8,6 +8,7 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
+	"io"
 	"net/http"
 	"path/filepath"
 	"sort"
@@ -27,55 +28,6 @@ type Plugin struct {
 	packages    map[string]*PackageDoc
 }
 
-// PackageDoc represents documentation for a package
-type PackageDoc struct {
-	Name        string
-	ImportPath  string
-	Doc         string
-	Types       []TypeDoc
-	Functions   []FunctionDoc
-	Constants   []ValueDoc
-	Variables   []ValueDoc
-}
-
-// TypeDoc represents documentation for a type
-type TypeDoc struct {
-	Name    string
-	Doc     string
-	Methods []FunctionDoc
-	Fields  []FieldDoc
-}
-
-// FunctionDoc represents documentation for a function or method
-type FunctionDoc struct {
-	Name       string
-	Doc        string
-	Signature  string
-	Parameters []ParamDoc
-	Returns    []string
-}
-
-// FieldDoc represents documentation for a struct field
-type FieldDoc struct {
-	Name string
-	Type string
-	Doc  string
-	Tag  string
-}
-
-// ParamDoc represents a function parameter
-type ParamDoc struct {
-	Name string
-	Type string
-}
-
-// ValueDoc represents documentation for a constant or variable
-type ValueDoc struct {
-	Name  string
-	Type  string
-	Value string
-	Doc   string
-}
 
 // NewPlugin creates a new documentation plugin
 func NewPlugin() *Plugin {
@@ -137,6 +89,14 @@ func (p *Plugin) Init(ctx context.Context) error {
 	}
 	
 	return nil
+}
+
+// PathToURLSegment converts a package path to a URL segment
+func PathToURLSegment(path string) string {
+	// Remove leading "./"
+	path = strings.TrimPrefix(path, "./")
+	// Replace "/" with "-"
+	return strings.ReplaceAll(path, "/", "-")
 }
 
 // Routes returns the documentation routes
@@ -446,7 +406,7 @@ func (p *Plugin) handleSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("[]"))
+		_, _ = w.Write([]byte("[]"))
 		return
 	}
 	
@@ -562,4 +522,46 @@ func (p *Plugin) Config() interface{} {
 // DefaultConfig returns default configuration
 func (p *Plugin) DefaultConfig() interface{} {
 	return p.Config()
+}
+
+// Template functions (simple placeholders)
+func docsIndexPage(packages map[string]*PackageDoc) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		_, _ = w.Write([]byte("<h1>Documentation</h1>"))
+		fmt.Fprintf(w, "<p>%d packages documented</p>", len(packages))
+		return nil
+	})
+}
+
+func apiReferencePage(packages []*PackageDoc) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		_, _ = w.Write([]byte("<h1>API Reference</h1>"))
+		_, _ = w.Write([]byte("<ul>"))
+		for _, p := range packages {
+			fmt.Fprintf(w, "<li>%s - %s</li>", p.Name, p.Path)
+		}
+		_, _ = w.Write([]byte("</ul>"))
+		return nil
+	})
+}
+
+func packageDocPage(pkg *PackageDoc) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		fmt.Fprintf(w, "<h1>Package %s</h1>", pkg.Name)
+		fmt.Fprintf(w, "<p>Path: %s</p>", pkg.Path)
+		if pkg.Doc != "" {
+			fmt.Fprintf(w, "<p>%s</p>", pkg.Doc)
+		}
+		return nil
+	})
+}
+
+func docsAdminPage(stats map[string]int) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		_, _ = w.Write([]byte("<h1>Documentation Admin</h1>"))
+		fmt.Fprintf(w, "<p>Packages: %d</p>", stats["packages"])
+		fmt.Fprintf(w, "<p>Types: %d</p>", stats["types"])
+		fmt.Fprintf(w, "<p>Functions: %d</p>", stats["functions"])
+		return nil
+	})
 }

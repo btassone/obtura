@@ -6,7 +6,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/btassone/obtura/internal/types"
 	"github.com/btassone/obtura/pkg/plugin"
-	"github.com/btassone/obtura/web/templates/admin/pages"
+	adminpages "github.com/btassone/obtura/web/templates/admin/pages"
 )
 
 // PluginListData represents data for the plugins list page

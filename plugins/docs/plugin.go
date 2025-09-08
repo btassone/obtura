@@ -8,7 +8,6 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
-	"io"
 	"net/http"
 	"path/filepath"
 	"sort"
@@ -524,44 +523,3 @@ func (p *Plugin) DefaultConfig() interface{} {
 	return p.Config()
 }
 
-// Template functions (simple placeholders)
-func docsIndexPage(packages map[string]*PackageDoc) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		_, _ = w.Write([]byte("<h1>Documentation</h1>"))
-		fmt.Fprintf(w, "<p>%d packages documented</p>", len(packages))
-		return nil
-	})
-}
-
-func apiReferencePage(packages []*PackageDoc) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		_, _ = w.Write([]byte("<h1>API Reference</h1>"))
-		_, _ = w.Write([]byte("<ul>"))
-		for _, p := range packages {
-			fmt.Fprintf(w, "<li>%s - %s</li>", p.Name, p.Path)
-		}
-		_, _ = w.Write([]byte("</ul>"))
-		return nil
-	})
-}
-
-func packageDocPage(pkg *PackageDoc) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		fmt.Fprintf(w, "<h1>Package %s</h1>", pkg.Name)
-		fmt.Fprintf(w, "<p>Path: %s</p>", pkg.Path)
-		if pkg.Doc != "" {
-			fmt.Fprintf(w, "<p>%s</p>", pkg.Doc)
-		}
-		return nil
-	})
-}
-
-func docsAdminPage(stats map[string]int) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		_, _ = w.Write([]byte("<h1>Documentation Admin</h1>"))
-		fmt.Fprintf(w, "<p>Packages: %d</p>", stats["packages"])
-		fmt.Fprintf(w, "<p>Types: %d</p>", stats["types"])
-		fmt.Fprintf(w, "<p>Functions: %d</p>", stats["functions"])
-		return nil
-	})
-}

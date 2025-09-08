@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -133,6 +134,11 @@ func (s *JSONFileConfigStorage) Save(pluginID string, config map[string]interfac
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	
+	// Validate plugin ID to prevent directory traversal
+	if err := validatePluginID(pluginID); err != nil {
+		return err
+	}
+	
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
@@ -182,6 +188,20 @@ func (s *JSONFileConfigStorage) List() ([]string, error) {
 // configPath returns the file path for a plugin's configuration
 func (s *JSONFileConfigStorage) configPath(pluginID string) string {
 	return filepath.Join(s.basePath, pluginID+".json")
+}
+
+// validatePluginID validates a plugin ID to prevent directory traversal
+func validatePluginID(pluginID string) error {
+	if pluginID == "" {
+		return fmt.Errorf("plugin ID cannot be empty")
+	}
+	
+	// Check for directory traversal patterns
+	if strings.Contains(pluginID, "..") || strings.Contains(pluginID, "/") || strings.Contains(pluginID, "\\") {
+		return fmt.Errorf("invalid plugin ID: %s", pluginID)
+	}
+	
+	return nil
 }
 
 // File system helpers (to be implemented based on OS)

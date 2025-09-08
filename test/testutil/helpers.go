@@ -15,15 +15,29 @@ import (
 
 // TestPlugin is a minimal plugin implementation for testing
 type TestPlugin struct {
+	IDFunc             func() string
 	NameFunc           func() string
 	DescriptionFunc    func() string
 	VersionFunc        func() string
 	AuthorFunc         func() string
 	WebsiteFunc        func() string
+	DependenciesFunc   func() []string
 	SettingsFieldsFunc func() []map[string]interface{}
-	InitFunc           func() error
-	ShutdownFunc       func() error
+	ConfigFunc         func() interface{}
+	ValidateConfigFunc func() error
+	InitFunc           func(context.Context) error
+	StartFunc          func(context.Context) error
+	StopFunc           func(context.Context) error
+	DestroyFunc        func(context.Context) error
 	RegisterFunc       func(router http.Handler) http.Handler
+	DefaultConfigFunc  func() interface{}
+}
+
+func (p *TestPlugin) ID() string {
+	if p.IDFunc != nil {
+		return p.IDFunc()
+	}
+	return "test-plugin"
 }
 
 func (p *TestPlugin) Name() string {
@@ -61,6 +75,13 @@ func (p *TestPlugin) Website() string {
 	return "https://example.com"
 }
 
+func (p *TestPlugin) Dependencies() []string {
+	if p.DependenciesFunc != nil {
+		return p.DependenciesFunc()
+	}
+	return []string{}
+}
+
 func (p *TestPlugin) SettingsFields() []map[string]interface{} {
 	if p.SettingsFieldsFunc != nil {
 		return p.SettingsFieldsFunc()
@@ -68,16 +89,51 @@ func (p *TestPlugin) SettingsFields() []map[string]interface{} {
 	return nil
 }
 
-func (p *TestPlugin) Init(ctx context.Context) error {
-	if p.InitFunc != nil {
-		return p.InitFunc()
+func (p *TestPlugin) Config() interface{} {
+	if p.ConfigFunc != nil {
+		return p.ConfigFunc()
+	}
+	return struct{}{}
+}
+
+func (p *TestPlugin) DefaultConfig() interface{} {
+	if p.DefaultConfigFunc != nil {
+		return p.DefaultConfigFunc()
+	}
+	return struct{}{}
+}
+
+func (p *TestPlugin) ValidateConfig() error {
+	if p.ValidateConfigFunc != nil {
+		return p.ValidateConfigFunc()
 	}
 	return nil
 }
 
-func (p *TestPlugin) Shutdown(ctx context.Context) error {
-	if p.ShutdownFunc != nil {
-		return p.ShutdownFunc()
+func (p *TestPlugin) Init(ctx context.Context) error {
+	if p.InitFunc != nil {
+		return p.InitFunc(ctx)
+	}
+	return nil
+}
+
+func (p *TestPlugin) Start(ctx context.Context) error {
+	if p.StartFunc != nil {
+		return p.StartFunc(ctx)
+	}
+	return nil
+}
+
+func (p *TestPlugin) Stop(ctx context.Context) error {
+	if p.StopFunc != nil {
+		return p.StopFunc(ctx)
+	}
+	return nil
+}
+
+func (p *TestPlugin) Destroy(ctx context.Context) error {
+	if p.DestroyFunc != nil {
+		return p.DestroyFunc(ctx)
 	}
 	return nil
 }

@@ -56,7 +56,13 @@ func New(config *Config) (*DB, error) {
 
 	dsn := buildDSN(config)
 	
-	db, err := sql.Open(config.Driver, dsn)
+	// Map sqlite to sqlite3 for the sql driver
+	driverName := config.Driver
+	if driverName == "sqlite" {
+		driverName = "sqlite3"
+	}
+	
+	db, err := sql.Open(driverName, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}

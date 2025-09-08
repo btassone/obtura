@@ -59,13 +59,7 @@ func (r *Registry) Register(p Plugin) error {
 		return fmt.Errorf("plugin %s already registered", id)
 	}
 	
-	// Check dependencies
-	for _, dep := range p.Dependencies() {
-		if _, exists := r.plugins[dep]; !exists {
-			return fmt.Errorf("plugin %s requires %s which is not registered", id, dep)
-		}
-	}
-	
+	// Don't check dependencies during registration - defer to Initialize
 	r.plugins[id] = p
 	
 	// Register default config and schema
@@ -205,12 +199,53 @@ func (r *Registry) Initialize(ctx context.Context) error {
 	defer r.mu.Unlock()
 	
 	// Initialize in dependency order
+	visiting := make(map[string]bool)
 	for _, p := range r.plugins {
-		if err := r.initializePlugin(ctx, p); err != nil {
+		if err := r.initializePluginWithCycleCheck(ctx, p, visiting); err != nil {
 			return err
 		}
 	}
 	
+	return nil
+}
+
+// initializePluginWithCycleCheck initializes a plugin with circular dependency detection
+func (r *Registry) initializePluginWithCycleCheck(ctx context.Context, p Plugin, visiting map[string]bool) error {
+	id := p.ID()
+	
+	// Already initialized
+	if r.initialized[id] {
+		return nil
+	}
+	
+	// Check for circular dependency
+	if visiting[id] {
+		return fmt.Errorf("circular dependency detected involving plugin %s", id)
+	}
+	
+	// Mark as visiting
+	visiting[id] = true
+	
+	// Check and initialize dependencies first
+	for _, depID := range p.Dependencies() {
+		dep, ok := r.plugins[depID]
+		if !ok {
+			return fmt.Errorf("plugin %s requires %s which is not registered", id, depID)
+		}
+		if err := r.initializePluginWithCycleCheck(ctx, dep, visiting); err != nil {
+			return err
+		}
+	}
+	
+	// Mark as no longer visiting
+	delete(visiting, id)
+	
+	// Initialize this plugin
+	if err := p.Init(ctx); err != nil {
+		return fmt.Errorf("failed to initialize plugin %s: %w", id, err)
+	}
+	
+	r.initialized[id] = true
 	return nil
 }
 
@@ -223,12 +258,14 @@ func (r *Registry) initializePlugin(ctx context.Context, p Plugin) error {
 		return nil
 	}
 	
-	// Initialize dependencies first
+	// Check and initialize dependencies first
 	for _, depID := range p.Dependencies() {
-		if dep, ok := r.plugins[depID]; ok {
-			if err := r.initializePlugin(ctx, dep); err != nil {
-				return err
-			}
+		dep, ok := r.plugins[depID]
+		if !ok {
+			return fmt.Errorf("plugin %s requires %s which is not registered", id, depID)
+		}
+		if err := r.initializePlugin(ctx, dep); err != nil {
+			return err
 		}
 	}
 	

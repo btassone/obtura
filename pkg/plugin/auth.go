@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"net/http"
 )
 
@@ -118,3 +119,40 @@ func (g *GuestUser) Name() string                      { return "Guest" }
 func (g *GuestUser) Role() string                      { return "guest" }
 func (g *GuestUser) Permissions() []string             { return []string{} }
 func (g *GuestUser) Metadata() map[string]interface{}  { return map[string]interface{}{} }
+
+// Common errors for auth
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrUnauthorized       = errors.New("unauthorized")
+)
+
+// User represents a concrete user type for tests and basic usage
+type User struct {
+	ID    uint   `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Role  string `json:"role"`
+}
+
+// BasicCredentials represents username/password authentication
+type BasicCredentials struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// Context key for auth
+type contextKey string
+
+const userContextKey contextKey = "user"
+
+// SetUserInContext adds a user to the context
+func SetUserInContext(ctx context.Context, user *User) context.Context {
+	return context.WithValue(ctx, userContextKey, user)
+}
+
+// GetUserFromContext retrieves a user from the context
+func GetUserFromContext(ctx context.Context) (*User, bool) {
+	user, ok := ctx.Value(userContextKey).(*User)
+	return user, ok
+}

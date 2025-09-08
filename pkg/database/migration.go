@@ -105,17 +105,17 @@ func (r *MigrationRunner) Rollback(steps int) error {
 
 // createMigrationsTable creates the migrations tracking table
 func (r *MigrationRunner) createMigrationsTable() error {
-	query := `
-		CREATE TABLE IF NOT EXISTS migrations (
-			version VARCHAR(255) PRIMARY KEY,
-			description VARCHAR(255),
-			checksum VARCHAR(32),
-			applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		)
-	`
+	var query string
 
 	// Adjust for different databases
 	switch r.db.Driver() {
+	case "sqlite", "sqlite3":
+		query = `CREATE TABLE IF NOT EXISTS migrations (
+			version TEXT PRIMARY KEY,
+			description TEXT,
+			checksum TEXT,
+			applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`
 	case "mysql":
 		query = `
 			CREATE TABLE IF NOT EXISTS migrations (
@@ -134,10 +134,22 @@ func (r *MigrationRunner) createMigrationsTable() error {
 				applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 			)
 		`
+	default:
+		query = `
+			CREATE TABLE IF NOT EXISTS migrations (
+				version VARCHAR(255) PRIMARY KEY,
+				description VARCHAR(255),
+				checksum VARCHAR(32),
+				applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			)
+		`
 	}
 
 	_, err := r.db.Exec(query)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to create migrations table: %w", err)
+	}
+	return nil
 }
 
 // getAppliedMigrations returns a map of applied migration versions

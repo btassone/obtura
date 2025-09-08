@@ -2,7 +2,6 @@ package testutil
 
 import (
 	"database/sql"
-	"fmt"
 	"testing"
 
 	"gorm.io/driver/sqlite"
@@ -55,7 +54,11 @@ func SeedTestData(t *testing.T, db *gorm.DB, records ...interface{}) {
 // AssertRecordExists checks if a record exists in the database
 func AssertRecordExists(t *testing.T, db *gorm.DB, model interface{}, conditions ...interface{}) {
 	var count int64
-	err := db.Model(model).Where(conditions...).Count(&count).Error
+	query := db.Model(model)
+	if len(conditions) > 0 {
+		query = query.Where(conditions[0], conditions[1:]...)
+	}
+	err := query.Count(&count).Error
 	if err != nil {
 		t.Fatalf("failed to count records: %v", err)
 	}
@@ -67,7 +70,11 @@ func AssertRecordExists(t *testing.T, db *gorm.DB, model interface{}, conditions
 // AssertRecordNotExists checks if a record does not exist in the database
 func AssertRecordNotExists(t *testing.T, db *gorm.DB, model interface{}, conditions ...interface{}) {
 	var count int64
-	err := db.Model(model).Where(conditions...).Count(&count).Error
+	query := db.Model(model)
+	if len(conditions) > 0 {
+		query = query.Where(conditions[0], conditions[1:]...)
+	}
+	err := query.Count(&count).Error
 	if err != nil {
 		t.Fatalf("failed to count records: %v", err)
 	}
@@ -127,7 +134,11 @@ func MustDelete(t *testing.T, db *gorm.DB, record interface{}) {
 // AssertCount asserts the number of records matching conditions
 func AssertCount(t *testing.T, db *gorm.DB, model interface{}, expected int64, conditions ...interface{}) {
 	var count int64
-	err := db.Model(model).Where(conditions...).Count(&count).Error
+	query := db.Model(model)
+	if len(conditions) > 0 {
+		query = query.Where(conditions[0], conditions[1:]...)
+	}
+	err := query.Count(&count).Error
 	if err != nil {
 		t.Fatalf("failed to count records: %v", err)
 	}

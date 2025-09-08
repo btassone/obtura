@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -216,7 +215,7 @@ func (p *Plugin) handlePluginDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	component := pluginDetailPage(*pluginInfo)
+	component := pluginDetailPage(pluginInfo)
 	templ.Handler(component).ServeHTTP(w, r)
 }
 
@@ -237,7 +236,7 @@ func (p *Plugin) handleAdminPluginDetail(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	
-	component := adminPluginDetailPage(*pluginInfo)
+	component := adminPluginDetailPage(pluginInfo)
 	templ.Handler(component).ServeHTTP(w, r)
 }
 
@@ -251,7 +250,7 @@ func (p *Plugin) handlePluginDocs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	component := pluginDocsPage(*pluginInfo)
+	component := pluginDocsPage(pluginInfo)
 	templ.Handler(component).ServeHTTP(w, r)
 }
 
@@ -274,7 +273,7 @@ func (p *Plugin) handlePluginSettings(w http.ResponseWriter, r *http.Request) {
 		// For now, we'll handle this in the template
 	}
 	
-	component := pluginSettingsPage(*pluginInfo, settings)
+	component := pluginSettingsPage(pluginInfo, settings)
 	templ.Handler(component).ServeHTTP(w, r)
 }
 
@@ -507,67 +506,3 @@ func (p *Plugin) findDependents(pluginID string, allPlugins []plugin.Plugin) []s
 	return dependents
 }
 
-// Template functions (simple placeholders)
-func hubPage(plugins []PluginInfo) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		_, _ = w.Write([]byte("<h1>Plugin Hub</h1>"))
-		_, _ = w.Write([]byte("<ul>"))
-		for _, p := range plugins {
-			fmt.Fprintf(w, "<li>%s - %s</li>", p.Name, p.Version)
-		}
-		_, _ = w.Write([]byte("</ul>"))
-		return nil
-	})
-}
-
-func pluginDetailPage(plugin PluginInfo) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		fmt.Fprintf(w, "<h1>%s</h1>", plugin.Name)
-		fmt.Fprintf(w, "<p>Version: %s</p>", plugin.Version)
-		fmt.Fprintf(w, "<p>%s</p>", plugin.Description)
-		return nil
-	})
-}
-
-func adminHubPage(plugins []PluginInfo) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		_, _ = w.Write([]byte("<h1>Admin Plugin Hub</h1>"))
-		_, _ = w.Write([]byte("<table><tr><th>Plugin</th><th>Version</th><th>Status</th></tr>"))
-		for _, p := range plugins {
-			status := "Inactive"
-			if p.IsActive {
-				status = "Active"
-			}
-			fmt.Fprintf(w, "<tr><td>%s</td><td>%s</td><td>%s</td></tr>", p.Name, p.Version, status)
-		}
-		_, _ = w.Write([]byte("</table>"))
-		return nil
-	})
-}
-
-func adminPluginDetailPage(plugin PluginInfo) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		fmt.Fprintf(w, "<h1>%s (Admin)</h1>", plugin.Name)
-		fmt.Fprintf(w, "<p>Version: %s</p>", plugin.Version)
-		fmt.Fprintf(w, "<p>Active: %v</p>", plugin.IsActive)
-		return nil
-	})
-}
-
-func pluginDocsPage(plugin PluginInfo) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		fmt.Fprintf(w, "<h1>%s Documentation</h1>", plugin.Name)
-		fmt.Fprintf(w, "<p>Documentation for %s</p>", plugin.Name)
-		return nil
-	})
-}
-
-func pluginSettingsPage(plugin PluginInfo, settings interface{}) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		fmt.Fprintf(w, "<h1>%s Settings</h1>", plugin.Name)
-		_, _ = w.Write([]byte("<form method=\"POST\">"))
-		fmt.Fprintf(w, "<pre>%v</pre>", settings)
-		_, _ = w.Write([]byte("<button type=\"submit\">Save</button></form>"))
-		return nil
-	})
-}

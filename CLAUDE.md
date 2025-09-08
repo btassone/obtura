@@ -653,6 +653,8 @@ See the architecture diagram in [docs/diagrams/architecture.md](docs/diagrams/ar
    - Admin plugins for admin panel features
    - Plugin registry with lifecycle management
    - Delayed route registration to fix middleware ordering
+   - Circular dependency detection and prevention
+   - Enhanced configuration storage with security validation
 
 2. **Admin Interface** - Working admin panel with:
    - JWT authentication system
@@ -667,12 +669,37 @@ See the architecture diagram in [docs/diagrams/architecture.md](docs/diagrams/ar
    - Admin interface for regeneration
    - Type, function, and method documentation
 
-4. **Database Integration** - SQLite/PostgreSQL support with:
+4. **Plugin Hub** - Central repository for discovering plugins:
+   - Browse available plugins
+   - Install/uninstall functionality
+   - Plugin metadata display
+   - Version management
+
+5. **Analytics Plugin** - Basic analytics tracking:
+   - Page view tracking
+   - Visitor statistics
+   - Admin dashboard integration
+   - Configurable tracking options
+
+6. **Authentication Plugin** - Extensible auth system:
+   - Basic authentication provider
+   - JWT token generation
+   - Session management
+   - Provider interface for custom auth
+
+7. **Database Integration** - SQLite/PostgreSQL support with:
    - GORM ORM
    - Migration system
    - User model with authentication
+   - Test utilities for database operations
 
-5. **Development Environment**:
+8. **Testing Infrastructure**:
+   - Comprehensive test helpers
+   - Test isolation with unique directories
+   - Mock configuration storage
+   - Integration test framework
+
+9. **Development Environment**:
    - Hot reload with Air
    - Templ integration for type-safe templates
    - Make commands for common tasks
@@ -685,11 +712,12 @@ See the architecture diagram in [docs/diagrams/architecture.md](docs/diagrams/ar
 
 ### 📁 Recent Changes
 
-1. **Fixed Import Cycles**: Created `internal/types` package for shared types
-2. **Fixed Middleware Ordering**: Added `SetRouter` method to delay route registration
-3. **Added Plugin Examples**: Comprehensive examples for all plugin types
-4. **Added Documentation Plugin**: Generates API docs from code comments
-5. **Updated Architecture Diagrams**: Added documentation and registry flows
+1. **Test Refactoring**: Simplified test setup and improved isolation across all test files
+2. **Plugin Security**: Added validation to prevent directory traversal in plugin IDs
+3. **Dependency Management**: Fixed circular dependency detection in plugin registry
+4. **Type Organization**: Extracted common types to `examples/plugins/types.go`
+5. **Test Configuration**: Added test configuration files for plugin testing
+6. **Error Handling**: Improved error messages and validation throughout the system
 
 ## Development Guidelines
 

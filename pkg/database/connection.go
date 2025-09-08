@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -16,7 +15,6 @@ type DB struct {
 	*sql.DB
 	config     *Config
 	driverName string
-	mu         sync.RWMutex
 }
 
 // Config holds database configuration
@@ -119,13 +117,13 @@ func (db *DB) Transaction(fn func(*sql.Tx) error) error {
 
 	defer func() {
 		if p := recover(); p != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			panic(p)
 		}
 	}()
 
 	if err := fn(tx); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 
